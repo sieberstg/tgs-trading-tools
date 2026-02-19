@@ -12,7 +12,7 @@
 .logo{display:flex;align-items:center;gap:10px}.logo-icon{width:36px;height:36px;background:var(--orange);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:15px}
 .logo-text{color:#fff;font-size:13px;line-height:1.3}.logo-text strong{font-weight:700;font-size:14px;display:block}.logo-text span{opacity:.7;font-weight:300;font-size:11px}
 .topbar-r{color:rgba(255,255,255,.6);font-size:11px}
-.wrap{max-width:1080px;margin:0 auto;padding:24px 20px 40px}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 20px 40px;overflow-x:hidden}
 h2{font-size:20px;font-weight:700;margin-bottom:4px}.page-sub{color:var(--g400);font-size:12px;margin-bottom:20px}
 .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
 .card{background:var(--wh);border:1px solid var(--g200);border-radius:10px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.04);margin-bottom:16px}
@@ -157,16 +157,7 @@ const TBILL_RATES={2003:1.02,2004:1.38,2005:3.16,2006:4.73,2007:4.36,2008:1.37,2
 let cfMode=false; // false=pure performance, true=cash flow model
 let cfStartDate=null; // null = use all data
 
-function setCFMode(isCF){
-  cfMode=isCF;
-  document.getElementById('mode-pure').className='pf-btn'+(cfMode?'':' active');
-  document.getElementById('mode-pure').style.cssText='font-size:11px'+(cfMode?'':';background:var(--teal);color:#fff;border-color:var(--teal)');
-  document.getElementById('mode-cf').className='pf-btn'+(cfMode?' active':'');
-  document.getElementById('mode-cf').style.cssText='font-size:11px'+(cfMode?';background:var(--teal);color:#fff;border-color:var(--teal)':'');
-  document.getElementById('cf-inputs').style.display=cfMode?'':'none';
-  document.getElementById('cf-help').style.display=cfMode?'':'none';
-  applyCashFlow();
-}
+// setCFMode removed
 
 function populateStartDates(){
   const sel=document.getElementById('cf-start');

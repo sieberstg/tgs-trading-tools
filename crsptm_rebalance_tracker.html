@@ -115,7 +115,7 @@ body.readonly .admin-only{display:none!important}
 <div class="update-bar" id="update-bar"><div class="update-bar-inner">
 <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
 <a href="https://www.wsj.com/market-data/quotes/index/CRSPTM/historical-prices" target="_blank" style="color:var(--teal);font-size:11px;text-decoration:none;font-weight:600">Download CRSPTM CSV from WSJ</a>
-<div style="flex:1;min-width:200px;border:1.5px dashed rgba(255,255,255,.3);border-radius:8px;padding:10px 16px;text-align:center;cursor:pointer;color:rgba(255,255,255,.6);font-size:11px" onclick="document.getElementById('csv-file').click()">
+<div id="drop-zone" style="flex:1;min-width:200px;border:1.5px dashed rgba(255,255,255,.3);border-radius:8px;padding:10px 16px;text-align:center;cursor:pointer;color:rgba(255,255,255,.6);font-size:11px" onclick="document.getElementById('csv-file').click()">
 Drop CSV here or click to browse
 <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="handleCSV(this.files[0])">
 </div>
@@ -125,7 +125,7 @@ Drop CSV here or click to browse
 </div></div>
 <div class="wrap">
 <h2>Market 10% Rebalance Monitor</h2>
-<div class="page-sub">Tracking the CRSP US Total Market Index to evaluate portfolio 10% rebalancing opportunities based on a 10% drawdown methodology. Data from March 2011 (index inception) through present.</div>
+<div class="page-sub">Tracking the CRSP US Total Market Index to evaluate potential portfolio rebalancing opportunities based on a 10% drawdown methodology. Data from March 2011 (index inception) through present.</div>
 <div id="as-of" style="display:inline-block;background:var(--g100);border:1px solid var(--g200);border-radius:6px;padding:5px 12px;font-size:12px;color:var(--g600);margin-bottom:16px;font-weight:500"></div>
 
 <div class="alert-bn" id="alert-bn"><div class="alert-ic" id="alert-ic"></div><div class="alert-body"><div class="alert-t" id="alert-t"></div><div class="alert-de" id="alert-de"></div><div class="alert-acts" id="alert-acts"></div></div></div>
@@ -186,6 +186,7 @@ function toggleAdmin(){
   isAdmin=!isAdmin;
   document.body.classList.toggle('readonly',!isAdmin);
   const badge=document.getElementById('mode-badge');
+  if(!badge)return;
   badge.textContent=isAdmin?'Admin Mode':'View Mode';
   badge.className='mode-badge '+(isAdmin?'mode-admin':'mode-read');
   // Hide/show delete buttons on annotations
@@ -353,8 +354,8 @@ function getAnn(d){const a=annotations[d];if(!a)return null;if(typeof a==='strin
 function annText(d){const a=getAnn(d);return a?a.t:''}
 function annLink(d){const a=getAnn(d);return a&&a.u?a.u:''}
 function toggleAnnVis(){const b=document.getElementById('ann-body');const btn=document.getElementById('ann-toggle');if(b.style.display==='none'){b.style.display='block';btn.textContent='Hide'}else{b.style.display='none';btn.textContent='Show'}}
-function toggleAnnForm(){const f=document.getElementById('ann-form');f.style.display=f.style.display==='none'?'block':'none'}
-function addAnnotation(){const d=document.getElementById('ann-date').value,t=document.getElementById('ann-text').value.trim();if(!d||!t)return;annotations[d]={t:t,u:''};localStorage.setItem('crsptm-ann',JSON.stringify(annotations));document.getElementById('ann-text').value='';renderAnn();drawChart()}
+function toggleAnnForm(){const f=document.getElementById('ann-form');if(!f)return;f.style.display=f.style.display==='none'?'block':'none'}
+function addAnnotation(){const dEl=document.getElementById('ann-date'),tEl=document.getElementById('ann-text');if(!dEl||!tEl)return;const d=dEl.value,t=tEl.value.trim();if(!d||!t)return;annotations[d]={t:t,u:''};localStorage.setItem('crsptm-ann',JSON.stringify(annotations));document.getElementById('ann-text').value='';renderAnn();drawChart()}
 function delAnnotation(d){delete annotations[d];localStorage.setItem('crsptm-ann',JSON.stringify(annotations));renderAnn();drawChart()}
 function renderAnn(){
   const{filtered}=getView();
@@ -775,7 +776,7 @@ function renderBestDays(){
   });
   h+='</tbody></table></div></div>';
   // Insight callout
-  h+='<div style="margin-top:12px;padding:10px 14px;background:var(--teal-lt);border-radius:8px;font-size:12px;color:var(--navy);line-height:1.6"><strong>Key Insight:</strong> '+bestAfter+' of the '+best.length+' best single-day returns occurred <strong>after</strong> a 10% rebalance trigger. Meanwhile, '+(worstSame+worstBefore)+' of the '+worst.length+' worst days occurred <strong>on or before</strong> the trigger date. The pattern is clear: the worst days lead into the rebalance, and the best days follow it. Investors who panic-sell after a 10% 10% rebalance trigger are selling at the bottom and missing the recovery rallies that are critical to long-term returns.</div>';
+  h+='<div style="margin-top:12px;padding:10px 14px;background:var(--teal-lt);border-radius:8px;font-size:12px;color:var(--navy);line-height:1.6"><strong>Key Insight:</strong> '+bestAfter+' of the '+best.length+' best single-day returns occurred <strong>after</strong> a 10% rebalance trigger. Meanwhile, '+(worstSame+worstBefore)+' of the '+worst.length+' worst days occurred <strong>on or before</strong> the trigger date. The pattern is clear: the worst days lead into the rebalance, and the best days follow it. Investors who panic-sell after a 10% rebalance trigger are selling at the bottom and missing the recovery rallies that are critical to long-term returns.</div>';
   document.getElementById('best-days-table').innerHTML=h;
 }
 
@@ -812,7 +813,7 @@ function renderCalReturns(){
 }
 
 function updateUI(){renderAsOf();renderAlert();renderStatus();renderZoom();drawChart();renderTable();renderRBHist();renderDDHist();renderBestDays();renderCalReturns();renderAnn()}
-function addEntry(){const d=document.getElementById('inp-date').value,c=parseFloat(document.getElementById('inp-close').value);if(!d||isNaN(c))return;userEntries=userEntries.filter(e=>e.d!==d);userEntries.push({d,c});userEntries.sort((a,b)=>a.d.localeCompare(b.d));localStorage.setItem('crsptm-ue',JSON.stringify(userEntries));document.getElementById('inp-close').value='';dismissed={};sessionStorage.setItem('crsptm-dis','{}');const dt=new Date(d+'T12:00:00');dt.setDate(dt.getDate()+1);while(dt.getDay()===0||dt.getDay()===6)dt.setDate(dt.getDate()+1);document.getElementById('inp-date').value=dt.toISOString().split('T')[0];updateUI()}
+function addEntry(){const dEl=document.getElementById('inp-date'),cEl=document.getElementById('inp-close');if(!dEl||!cEl)return;const d=dEl.value,c=parseFloat(cEl.value);if(!d||isNaN(c))return;userEntries=userEntries.filter(e=>e.d!==d);userEntries.push({d,c});userEntries.sort((a,b)=>a.d.localeCompare(b.d));localStorage.setItem('crsptm-ue',JSON.stringify(userEntries));document.getElementById('inp-close').value='';dismissed={};sessionStorage.setItem('crsptm-dis','{}');const dt=new Date(d+'T12:00:00');dt.setDate(dt.getDate()+1);while(dt.getDay()===0||dt.getDay()===6)dt.setDate(dt.getDate()+1);document.getElementById('inp-date').value=dt.toISOString().split('T')[0];updateUI()}
 // CSV handling
 function handleCSV(file){
   if(!file)return;
