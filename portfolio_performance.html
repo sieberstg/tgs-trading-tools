@@ -12,7 +12,7 @@
 .logo{display:flex;align-items:center;gap:10px}.logo-icon{width:36px;height:36px;background:var(--orange);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:15px}
 .logo-text{color:#fff;font-size:13px;line-height:1.3}.logo-text strong{font-weight:700;font-size:14px;display:block}.logo-text span{opacity:.7;font-weight:300;font-size:11px}
 .topbar-r{color:rgba(255,255,255,.6);font-size:11px}
-.wrap{max-width:1100px;margin:0 auto;padding:24px 20px 40px}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 20px 40px}
 h2{font-size:20px;font-weight:700;margin-bottom:4px}.page-sub{color:var(--g400);font-size:12px;margin-bottom:20px}
 .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
 .card{background:var(--wh);border:1px solid var(--g200);border-radius:10px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.04);margin-bottom:16px}
@@ -484,7 +484,7 @@ function drawChart(){
   // Add AGG benchmark if toggled on
   if(showAGG){let agB=filterByPreset(getAGGBench());if(customRange&&brushSD&&brushED)agB=agB.filter(e=>e.d>=brushSD&&e.d<=brushED);if(agB.length>1){(function(){const sv=agB[0].v;lines.push({color:'#c9a0dc',name:'Bonds (AGG)',idx:-4,isBench:true,pts:agB.map(e=>({d:e.d,v:((e.v/sv)-1)*100}))})})()}}
   // Add T-Bill benchmark if toggled on
-  if(showTBill){let tbB=filterByPreset(getTBillBench());if(customRange&&brushSD&&brushED)tbB=tbB.filter(e=>e.d>=brushSD&&e.d<=brushED);if(tbB.length>1){(function(){const sv=tbB[0].v;lines.push({color:'#ccc',name:'T-Bills',idx:-2,isBench:true,pts:tbB.map(e=>({d:e.d,v:((e.v/sv)-1)*100}))})})()}}
+  if(showTBill){let tbB=filterByPreset(getTBillBench());if(customRange&&brushSD&&brushED)tbB=tbB.filter(e=>e.d>=brushSD&&e.d<=brushED);if(tbB.length>1){(function(){const sv=tbB[0].v;lines.push({color:'#999',name:'T-Bills',idx:-2,isBench:true,pts:tbB.map(e=>({d:e.d,v:((e.v/sv)-1)*100}))})})()}}
   let minY=Infinity,maxY=-Infinity;
   lines.forEach(l=>l.pts.forEach(p=>{if(p.v<minY)minY=p.v;if(p.v>maxY)maxY=p.v}));
   const yP=(maxY-minY)*.06;minY-=yP;maxY+=yP;
@@ -561,7 +561,7 @@ function drawChart(){
   if(showSP500)leg+='<span style="opacity:.6"><span class="leg-line" style="background:#bbb;border-top:1px dashed #bbb;height:0"></span>S&P 500</span>';
   if(showEFA)leg+='<span style="opacity:.6"><span class="leg-line" style="background:#93c5e8;border-top:1px dashed #93c5e8;height:0"></span>Intl (EFA)</span>';
   if(showAGG)leg+='<span style="opacity:.6"><span class="leg-line" style="background:#c9a0dc;border-top:1px dashed #c9a0dc;height:0"></span>Bonds (AGG)</span>';
-  if(showTBill)leg+='<span style="opacity:.6"><span class="leg-line" style="background:#ccc;border-top:1px dashed #ccc;height:0"></span>T-Bills</span>';
+  if(showTBill)leg+='<span style="opacity:.6"><span class="leg-line" style="background:#999;border-top:1px dashed #999;height:0"></span>T-Bills</span>';
   if(showRebalance)leg+='<span style="opacity:.6"><span style="font-size:8px;color:var(--red);font-weight:700">R</span> Rebalance</span>';
   document.getElementById('chart-legend').innerHTML=leg;
   // Store for tooltip
@@ -596,7 +596,7 @@ function renderBenchToggles(){
     '<label style="cursor:pointer;display:flex;align-items:center;gap:3px"><input type="checkbox" '+(showSP500?'checked':'')+' onchange="showSP500=this.checked;drawChart()"><span style="color:#bbb">S&P 500</span></label>'+
     '<label style="cursor:pointer;display:flex;align-items:center;gap:3px"><input type="checkbox" '+(showEFA?'checked':'')+' onchange="showEFA=this.checked;drawChart()"><span style="color:#93c5e8">Intl (EFA)</span></label>'+
     '<label style="cursor:pointer;display:flex;align-items:center;gap:3px"><input type="checkbox" '+(showAGG?'checked':'')+' onchange="showAGG=this.checked;drawChart()"><span style="color:#c9a0dc">Bonds (AGG)</span></label>'+
-    '<label style="cursor:pointer;display:flex;align-items:center;gap:3px"><input type="checkbox" '+(showTBill?'checked':'')+' onchange="showTBill=this.checked;drawChart()"><span style="color:#ccc">T-Bills</span></label>';
+    '<label style="cursor:pointer;display:flex;align-items:center;gap:3px"><input type="checkbox" '+(showTBill?'checked':'')+' onchange="showTBill=this.checked;drawChart()"><span style="color:#999">T-Bills</span></label>';
 }
 
 function renderCompare(){
@@ -608,7 +608,7 @@ function renderCompare(){
     const yrs=Object.entries(bt.calYrRet).sort((a,b)=>b[1]-a[1]);
     const bestYr=yrs[0]||['N/A',0];const worstYr=yrs[yrs.length-1]||['N/A',0];
     const spW=(p.eq*80).toFixed(0),efW=(p.eq*20).toFixed(0),agW=(p.bd*100).toFixed(0);
-    h+='<tr class="'+(i===activePF?'active-row':'')+'"><td style="color:'+p.color+'">'+p.name+'</td><td>$'+bt.finalVal.toLocaleString(undefined,{maximumFractionDigits:0})+'</td><td style="color:'+(bt.pureAnnRet>=0?'var(--grn)':'var(--red)')+'">'+bt.pureAnnRet.toFixed(2)+'%</td>'+(function(){const bm=getBenchMetrics();return '<td style="color:'+(bt.annVol<=bm.vol?'var(--grn)':'var(--red)')+'">'+bt.annVol.toFixed(1)+'%</td>'}())+'<td style="color:var(--red)">'+bt.maxDD.toFixed(1)+'%</td><td style="color:var(--grn)">'+bestYr[0]+': +'+bestYr[1].toFixed(1)+'%</td><td style="color:var(--red)">'+worstYr[0]+': '+worstYr[1].toFixed(1)+'%</td></tr>';
+    h+='<tr class="'+(i===activePF?'active-row':'')+'"><td style="color:'+p.color+'">'+p.name+'</td><td>$'+bt.finalVal.toLocaleString(undefined,{maximumFractionDigits:0})+'</td><td style="color:'+(bt.pureAnnRet>=0?'var(--grn)':'var(--red)')+'">'+bt.pureAnnRet.toFixed(2)+'%</td>'+(function(){const bm=getBenchMetrics();return '<td style="color:'+(bt.annVol<=bm.vol?'var(--grn)':'var(--red)')+'">'+bt.annVol.toFixed(1)+'%</td>'}())+'<td style="color:var(--red)">'+bt.maxDD.toFixed(1)+'%<div style="font-size:9px;color:var(--g400)">'+fD(bt.maxDDDate)+'</div></td><td style="color:var(--grn)">'+bestYr[0]+': +'+bestYr[1].toFixed(1)+'%</td><td style="color:var(--red)">'+worstYr[0]+': '+worstYr[1].toFixed(1)+'%</td></tr>';
   });
   // Add benchmarks to comparison
   const spBT=getSP500Bench();const tbBT=getTBillBench();

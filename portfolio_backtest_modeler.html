@@ -12,7 +12,7 @@
 .logo{display:flex;align-items:center;gap:10px}.logo-icon{width:36px;height:36px;background:var(--orange);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:15px}
 .logo-text{color:#fff;font-size:13px;line-height:1.3}.logo-text strong{font-weight:700;font-size:14px;display:block}.logo-text span{opacity:.7;font-weight:300;font-size:11px}
 .topbar-r{color:rgba(255,255,255,.6);font-size:11px}
-.wrap{max-width:1100px;margin:0 auto;padding:24px 20px 40px}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 20px 40px}
 h2{font-size:20px;font-weight:700;margin-bottom:4px}.page-sub{color:var(--g400);font-size:12px;margin-bottom:20px}
 .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
 .card{background:var(--wh);border:1px solid var(--g200);border-radius:10px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.04);margin-bottom:16px}
@@ -88,6 +88,7 @@ tr.active-row td{background:var(--teal-lt)}
 <div><label style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--g400);display:block;margin-bottom:3px">Monthly Contribution</label><div style="display:flex;align-items:center"><span style="font-size:13px;color:var(--g400);margin-right:4px">$</span><input type="number" id="cf-contrib" value="0" min="0" step="100" style="width:100%;padding:7px 10px;border:1px solid var(--g200);border-radius:6px;font-family:Inter,sans-serif;font-size:13px;outline:none"></div></div>
 <div><label style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--g400);display:block;margin-bottom:3px">Monthly Withdrawal</label><div style="display:flex;align-items:center"><span style="font-size:13px;color:var(--g400);margin-right:4px">$</span><input type="number" id="cf-withdraw" value="0" min="0" step="100" style="width:100%;padding:7px 10px;border:1px solid var(--g200);border-radius:6px;font-family:Inter,sans-serif;font-size:13px;outline:none"></div></div>
 <div><label style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--g400);display:block;margin-bottom:3px">Annual Withdrawal %</label><div style="display:flex;align-items:center"><input type="number" id="cf-pct" value="0" min="0" max="20" step="0.5" style="width:100%;padding:7px 10px;border:1px solid var(--g200);border-radius:6px;font-family:Inter,sans-serif;font-size:13px;outline:none"><span style="font-size:13px;color:var(--g400);margin-left:4px">%</span></div></div>
+<div><label style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--g400);display:block;margin-bottom:3px">Inflation Adjustment</label><div style="display:flex;align-items:center"><input type="number" id="cf-inflation" value="0" min="0" max="10" step="0.5" style="width:100%;padding:7px 10px;border:1px solid var(--g200);border-radius:6px;font-family:Inter,sans-serif;font-size:13px;outline:none"><span style="font-size:13px;color:var(--g400);margin-left:4px">%/yr</span></div></div>
 </div>
 </div>
 </div>
@@ -96,7 +97,7 @@ tr.active-row td{background:var(--teal-lt)}
 <div class="card">
 <div class="card-hdr"><div class="card-title">Portfolio Growth <span class="section-toggle" data-section="sec-chart" onclick="toggleSection('sec-chart')">Hide</span></div><button class="zoom-reset" id="zoom-reset" onclick="resetBrush()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 1 3 6.7"/><path d="M3 20v-7h7"/></svg>Reset Zoom</button></div>
 <div id="sec-chart">
-<div class="chart-ctrls"><div class="zoom-bar" id="zoom-bar"></div><div class="chart-hint" id="chart-hint">Click & drag to zoom</div></div>
+<div class="chart-ctrls"><div class="zoom-bar" id="zoom-bar"></div><div id="bench-toggles" style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--g400);flex-wrap:wrap"></div><div class="chart-hint" id="chart-hint">Click & drag to zoom</div></div>
 <div class="legend" id="chart-legend"></div>
 <div class="chart-wrap" id="chart-wrap"><canvas id="chart"></canvas><div class="tt" id="tooltip"></div><div class="sel-ov" id="sel-ov"></div></div>
 <div id="chart-return" style="font-size:11px;color:var(--g400);margin-top:8px;text-align:right"></div>
@@ -130,6 +131,7 @@ Upload updated CSVs from WSJ to refresh the data. Upload each index separately �
 <div id="pf-csv-status" style="display:none;font-size:12px;padding:8px 12px;border-radius:6px;margin-top:10px"></div>
 <div style="margin-top:10px"><button class="btn btn-sm" onclick="exportPFDashboard()" style="background:var(--navy)">Export Updated Dashboard</button> <span style="font-size:10px;color:var(--g400)">Download HTML with latest data for GitHub</span></div>
 </div></div>
+
 <div class="card" style="margin-top:20px;background:var(--g50)">
 <div class="card-title" style="margin-bottom:8px">Disclosures <span class="section-toggle" data-section="sec-disc" onclick="toggleSection('sec-disc')">Hide</span></div>
 <div id="sec-disc" style="font-size:11px;color:var(--g600);line-height:1.7">
@@ -162,16 +164,7 @@ let cfMode=false; // false=pure performance, true=cash flow model
 let cfStartDate=null; // null = use all data
 let cfEndDate=null;
 
-function setCFMode(isCF){
-  cfMode=isCF;
-  document.getElementById('mode-pure').className='pf-btn'+(cfMode?'':' active');
-  document.getElementById('mode-pure').style.cssText='font-size:11px'+(cfMode?'':';background:var(--teal);color:#fff;border-color:var(--teal)');
-  document.getElementById('mode-cf').className='pf-btn'+(cfMode?' active':'');
-  document.getElementById('mode-cf').style.cssText='font-size:11px'+(cfMode?';background:var(--teal);color:#fff;border-color:var(--teal)':'');
-  
-  
-  applyCashFlow();
-}
+// setCFMode removed - always in cash flow mode
 
 function populateStartDates(){
   const selS=document.getElementById('cf-start');
@@ -201,16 +194,22 @@ function populateStartDates(){
 }
 
 function getFilteredData(){
-  return DATA.filter(e=>(!cfStartDate||e.d>=cfStartDate)&&(!cfEndDate||e.d<=cfEndDate));
+  const filtered=DATA.filter(e=>(!cfStartDate||e.d>=cfStartDate)&&(!cfEndDate||e.d<=cfEndDate));
+  return filtered.length>0?filtered:DATA;
 }
 
-let cfSettings={initial:10000,contrib:0,withdraw:0,pctWithdraw:0};
+let cfSettings={initial:10000,contrib:0,withdraw:0,pctWithdraw:0,inflation:0};
 function applyCashFlow(){
-  cfSettings.initial=parseFloat(document.getElementById('cf-initial').value)||10000;
-  cfSettings.contrib=parseFloat(document.getElementById('cf-contrib').value)||0;
-  cfSettings.withdraw=parseFloat(document.getElementById('cf-withdraw').value)||0;
-  cfSettings.pctWithdraw=parseFloat(document.getElementById('cf-pct').value)||0;
-  btCache={};sp500Bench=null;tbillBench=null;benchMetrics=null;efaBench=null;aggBench=null; // Clear caches
+  const initialEl=document.getElementById('cf-initial');cfSettings.initial=initialEl?parseFloat(initialEl.value)||10000:10000;
+  const contribEl=document.getElementById('cf-contrib');cfSettings.contrib=contribEl?parseFloat(contribEl.value)||0:0;
+  const withdrawEl=document.getElementById('cf-withdraw');cfSettings.withdraw=withdrawEl?parseFloat(withdrawEl.value)||0:0;
+  const pctWithdrawEl=document.getElementById('cf-pct');cfSettings.pctWithdraw=pctWithdrawEl?parseFloat(pctWithdrawEl.value)||0:0;
+  const inflEl=document.getElementById('cf-inflation');cfSettings.inflation=inflEl?parseFloat(inflEl.value)||0:0;
+  const selS=document.getElementById('cf-start');
+  const selE=document.getElementById('cf-end');
+  cfStartDate=(selS&&selS.value&&selS.value!=='')?selS.value:null;
+  cfEndDate=(selE&&selE.value&&selE.value!=='')?selE.value:null;
+  btCache={};sp500Bench=null;tbillBench=null;benchMetrics=null;efaBench=null;aggBench=null;sp500Signals=null;
   updateUI();
 }
 
@@ -236,7 +235,7 @@ function getBenchMetrics(){
 
 let activePF=5;
 let visiblePFs=new Set([5]);
-let showSP500=true,showTBill=true,showEFA=false,showAGG=false; // default 60/40
+let showSP500=false,showTBill=false,showEFA=false,showAGG=false,showRebalance=false; // default 60/40
 let zoomRange='ALL',brushSD=null,brushED=null,customRange=false,isDrag=false;
 let cPad,cCW,cCH,cW,cH;
 
@@ -442,11 +441,7 @@ function renderPFSelector(){
     h+='<button class="pf-btn'+(isActive?' active':'')+'" style="'+(isActive?'background:'+p.color+';border-color:'+p.color+';color:#fff':isVisible?'border-left:3px solid '+p.color+';background:var(--wh)':'border-left:3px solid var(--g200);opacity:.4')+'" onclick="selectPF('+i+',event)">'+p.name+'</button>';
   });
   // Benchmarks toggle
-  h+='<span style="font-size:10px;color:var(--g400);margin-left:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="font-weight:600">Benchmarks:</span>';
-  h+='<label style="cursor:pointer;display:flex;align-items:center;gap:3px"><input type="checkbox" '+(showSP500?'checked':'')+' onchange="showSP500=this.checked;drawChart()"> S&P 500</label>';
-  h+='<label style="cursor:pointer;display:flex;align-items:center;gap:3px"><input type="checkbox" '+(showEFA?'checked':'')+' onchange="showEFA=this.checked;drawChart()"> Intl (EFA)</label>';
-  h+='<label style="cursor:pointer;display:flex;align-items:center;gap:3px"><input type="checkbox" '+(showAGG?'checked':'')+' onchange="showAGG=this.checked;drawChart()"> Bonds (AGG)</label>';
-  h+='<label style="cursor:pointer;display:flex;align-items:center;gap:3px"><input type="checkbox" '+(showTBill?'checked':'')+' onchange="showTBill=this.checked;drawChart()"> T-Bills</label></span>';
+
   document.getElementById('pf-selector').innerHTML=h;
 }
 function selectPF(i,ev){
@@ -499,13 +494,13 @@ function drawChart(){
     const b=getBT(i);let d=filterByPreset(b.daily);if(customRange&&brushSD&&brushED)d=d.filter(e=>e.d>=brushSD&&e.d<=brushED);if(d.length<2)return null;return{color:p.color,name:p.name,idx:i,isBench:false,pts:d.map(e=>({d:e.d,v:e.v}))}
   }).filter(Boolean);
   // Add S&P 500 benchmark if toggled on
-  if(showSP500){let spB=filterByPreset(getSP500Bench());if(customRange&&brushSD&&brushED)spB=spB.filter(e=>e.d>=brushSD&&e.d<=brushED);if(spB.length>1){lines.push({color:'#555',name:'S&P 500',idx:-1,isBench:true,pts:spB.map(e=>({d:e.d,v:e.v}))})}}
+  if(showSP500){let spB=filterByPreset(getSP500Bench());if(customRange&&brushSD&&brushED)spB=spB.filter(e=>e.d>=brushSD&&e.d<=brushED);if(spB.length>1){lines.push({color:'#bbb',name:'S&P 500',idx:-1,isBench:true,pts:spB.map(e=>({d:e.d,v:e.v}))})}}
   // Add EFA benchmark if toggled on
-  if(showEFA){let efB=filterByPreset(getEFABench());if(customRange&&brushSD&&brushED)efB=efB.filter(e=>e.d>=brushSD&&e.d<=brushED);if(efB.length>1){lines.push({color:'#2980b9',name:'Intl (EFA)',idx:-3,isBench:true,pts:efB.map(e=>({d:e.d,v:e.v}))})}}
+  if(showEFA){let efB=filterByPreset(getEFABench());if(customRange&&brushSD&&brushED)efB=efB.filter(e=>e.d>=brushSD&&e.d<=brushED);if(efB.length>1){lines.push({color:'#93c5e8',name:'Intl (EFA)',idx:-3,isBench:true,pts:efB.map(e=>({d:e.d,v:e.v}))})}}
   // Add AGG benchmark if toggled on
-  if(showAGG){let agB=filterByPreset(getAGGBench());if(customRange&&brushSD&&brushED)agB=agB.filter(e=>e.d>=brushSD&&e.d<=brushED);if(agB.length>1){lines.push({color:'#8e44ad',name:'Bonds (AGG)',idx:-4,isBench:true,pts:agB.map(e=>({d:e.d,v:e.v}))})}}
+  if(showAGG){let agB=filterByPreset(getAGGBench());if(customRange&&brushSD&&brushED)agB=agB.filter(e=>e.d>=brushSD&&e.d<=brushED);if(agB.length>1){lines.push({color:'#c9a0dc',name:'Bonds (AGG)',idx:-4,isBench:true,pts:agB.map(e=>({d:e.d,v:e.v}))})}}
   // Add T-Bill benchmark if toggled on
-  if(showTBill){let tbB=filterByPreset(getTBillBench());if(customRange&&brushSD&&brushED)tbB=tbB.filter(e=>e.d>=brushSD&&e.d<=brushED);if(tbB.length>1){lines.push({color:'#aaa',name:'T-Bills',idx:-2,isBench:true,pts:tbB.map(e=>({d:e.d,v:e.v}))})}}
+  if(showTBill){let tbB=filterByPreset(getTBillBench());if(customRange&&brushSD&&brushED)tbB=tbB.filter(e=>e.d>=brushSD&&e.d<=brushED);if(tbB.length>1){lines.push({color:'#ccc',name:'T-Bills',idx:-2,isBench:true,pts:tbB.map(e=>({d:e.d,v:e.v}))})}}
   let minY=Infinity,maxY=-Infinity;
   lines.forEach(l=>l.pts.forEach(p=>{if(p.v<minY)minY=p.v;if(p.v>maxY)maxY=p.v}));
   const yP=(maxY-minY)*.06;minY=Math.max(0,minY-yP);maxY+=yP;
@@ -528,6 +523,7 @@ function drawChart(){
     const lE=Math.max(1,Math.floor(mainPts.length/8));for(let i=0;i<mainPts.length;i+=lE)ctx.fillText(fS(mainPts[i].d),xS(i),cH-6);
     if(mainPts.length>1)ctx.fillText(fS(mainPts[mainPts.length-1].d),xS(mainPts.length-1),cH-6);
   }
+    window._chartLines=lines;window._chartMainPts=lines.find(l=>l.idx===activePF)?.pts||lines[0]?.pts||[];
   // Fill under active
   const aLine=lines.find(l=>l.idx===activePF);
   if(aLine){const gr=ctx.createLinearGradient(0,cPad.t,0,cH-cPad.b);gr.addColorStop(0,PORTFOLIOS[activePF].color+'20');gr.addColorStop(1,PORTFOLIOS[activePF].color+'02');ctx.beginPath();aLine.pts.forEach((p,i)=>{const x=xS(i);const y=yS(p.v);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.lineTo(xS(aLine.pts.length-1),cH-cPad.b);ctx.lineTo(xS(0),cH-cPad.b);ctx.closePath();ctx.fillStyle=gr;ctx.fill()}
@@ -554,30 +550,33 @@ function drawChart(){
     l.pts.forEach((p,i)=>{const x=xS(i);const y=yS(p.v);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
     ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
   });
-  // Draw vertical dashed lines at S&P 500 rebalance events (only if S&P shown)
-  if(!showSP500){window._chartLines=lines;return}
-  const sigs=getSP500Signals();const sigMap=new Map();sigs.forEach(s=>sigMap.set(s.d,s));
-  const spLine=lines.find(l=>l.idx===-1);
-  if(spLine){spLine.pts.forEach((p,i)=>{const sig=sigMap.get(p.d);if(sig&&sig.s==='R'){
-    const x=xS(i);
-    ctx.beginPath();ctx.strokeStyle='rgba(192,57,43,0.35)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
-    ctx.moveTo(x,cPad.t);ctx.lineTo(x,cH-cPad.b);ctx.stroke();ctx.setLineDash([]);
-    // Small label at top
-    ctx.fillStyle='rgba(192,57,43,0.6)';ctx.font='bold 8px Inter';ctx.textAlign='center';
-    ctx.fillText('R',x,cPad.t-3);
-  }})}
-  window._chartLines=lines;window._chartMainPts=lines.find(l=>l.idx===activePF)?.pts||lines[0]?.pts||[];
+  // Draw vertical dashed lines at S&P 500 rebalance events
+  if(showRebalance){
+    const sigs=getSP500Signals();const sigMap=new Map();sigs.forEach(s=>sigMap.set(s.d,s));
+    const refPts=window._chartMainPts||[];
+    const dateIdx=new Map();refPts.forEach((p,i)=>dateIdx.set(p.d,i));
+    sigs.filter(s=>s.s==='R').forEach(s=>{
+      const i=dateIdx.get(s.d);if(i===undefined)return;
+      const x=xS(i);
+      ctx.beginPath();ctx.strokeStyle='rgba(192,57,43,0.35)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+      ctx.moveTo(x,cPad.t);ctx.lineTo(x,cH-cPad.b);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle='rgba(192,57,43,0.6)';ctx.font='bold 8px Inter';ctx.textAlign='center';
+      ctx.fillText('R',x,cPad.t-3);
+    });
+  }
+  // _chartLines/pts set earlier
     // Return display
   const startV=daily[0].v,endV=daily[daily.length-1].v;const cumRet=((endV-startV)/startV*100).toFixed(2);
   const retEl=document.getElementById('chart-return');
   if(retEl)retEl.innerHTML='<span style="color:'+(parseFloat(cumRet)>=0?'var(--grn)':'var(--red)')+'">'+(parseFloat(cumRet)>=0?'+':'')+cumRet+'%</span> · '+fD(daily[0].d)+' to '+fD(daily[daily.length-1].d);
   // Legend
   let leg='';PORTFOLIOS.forEach((p,i)=>{if(visiblePFs.has(i)){leg+='<span style="font-weight:'+(i===activePF?'700':'400')+';opacity:'+(i===activePF?'1':'0.6')+'"><span class="leg-line" style="background:'+p.color+'"></span>'+p.name+'</span>'}});
-  if(showSP500)leg+='<span style="opacity:.6"><span class="leg-line" style="background:#555;border-top:1px dashed #555;height:0"></span>S&P 500</span>';
-  if(showEFA)leg+='<span style="opacity:.6"><span class="leg-line" style="background:#2980b9;border-top:1px dashed #2980b9;height:0"></span>Intl (EFA)</span>';
-  if(showAGG)leg+='<span style="opacity:.6"><span class="leg-line" style="background:#8e44ad;border-top:1px dashed #8e44ad;height:0"></span>Bonds (AGG)</span>';
-  if(showTBill)leg+='<span style="opacity:.6"><span class="leg-line" style="background:#aaa;border-top:1px dashed #aaa;height:0"></span>T-Bills</span>';
+  if(showSP500)leg+='<span style="opacity:.6"><span class="leg-line" style="background:#bbb;border-top:1px dashed #bbb;height:0"></span>S&P 500</span>';
+  if(showEFA)leg+='<span style="opacity:.6"><span class="leg-line" style="background:#93c5e8;border-top:1px dashed #93c5e8;height:0"></span>Intl (EFA)</span>';
+  if(showAGG)leg+='<span style="opacity:.6"><span class="leg-line" style="background:#c9a0dc;border-top:1px dashed #c9a0dc;height:0"></span>Bonds (AGG)</span>';
+  if(showTBill)leg+='<span style="opacity:.6"><span class="leg-line" style="background:#ccc;border-top:1px dashed #ccc;height:0"></span>T-Bills</span>';
   if(showSP500)leg+='<span style="opacity:.6"><span style="font-size:8px;color:var(--red);font-weight:700">R</span> Rebalance</span>';
+  if(showRebalance)leg+='<span style="opacity:.6"><span style="font-size:8px;color:var(--red);font-weight:700">R</span> Rebalance</span>';
   document.getElementById('chart-legend').innerHTML=leg;
   // Store for tooltip
   // _chartLines already set above
@@ -602,6 +601,17 @@ function setupInteract(){
 }
 function resetBrush(){customRange=false;brushSD=null;brushED=null;updateUI()}
 function renderZoom(){const rr=['YTD','1Y','3Y','5Y','10Y','20Y','ALL'];document.getElementById('zoom-bar').innerHTML=rr.map(r=>'<button class="zoom-btn'+(r===zoomRange&&!customRange?' active':'')+'" onclick="setZoom(\''+r+'\')">'+r+'</button>').join('');const rb=document.getElementById('zoom-reset'),h=document.getElementById('chart-hint');if(customRange){rb.style.display='inline-flex';h.textContent='Viewing '+fD(brushSD)+' — '+fD(brushED);h.style.fontStyle='normal';h.style.fontWeight='600';h.style.color='var(--teal)'}else{rb.style.display='none';h.textContent='Click & drag to zoom';h.style.fontStyle='italic';h.style.color='var(--g400)'}}
+function renderBenchToggles(){
+  const el=document.getElementById('bench-toggles');if(!el)return;
+  el.innerHTML='<span style="font-weight:600;color:var(--g400)">Overlay:</span>'+
+    '<label style="cursor:pointer;display:flex;align-items:center;gap:3px"><input type="checkbox" '+(showRebalance?'checked':'')+' onchange="showRebalance=this.checked;drawChart()"><span style="color:var(--red);font-size:10px">Rebalance Events</span></label>'+
+    '<span style="font-weight:600;color:var(--g400);margin-left:6px">Benchmarks:</span>'+
+    '<label style="cursor:pointer;display:flex;align-items:center;gap:3px"><input type="checkbox" '+(showSP500?'checked':'')+' onchange="showSP500=this.checked;drawChart()"><span style="color:#bbb">S&P 500</span></label>'+
+    '<label style="cursor:pointer;display:flex;align-items:center;gap:3px"><input type="checkbox" '+(showEFA?'checked':'')+' onchange="showEFA=this.checked;drawChart()"><span style="color:#93c5e8">Intl (EFA)</span></label>'+
+    '<label style="cursor:pointer;display:flex;align-items:center;gap:3px"><input type="checkbox" '+(showAGG?'checked':'')+' onchange="showAGG=this.checked;drawChart()"><span style="color:#c9a0dc">Bonds (AGG)</span></label>'+
+    '<label style="cursor:pointer;display:flex;align-items:center;gap:3px"><input type="checkbox" '+(showTBill?'checked':'')+' onchange="showTBill=this.checked;drawChart()"><span style="color:#ccc">T-Bills</span></label>';
+}
+
 function setZoom(r){zoomRange=r;customRange=false;brushSD=null;brushED=null;updateUI()}
 
 function renderCompare(){
@@ -614,7 +624,7 @@ function renderCompare(){
     const bestYr=yrs[0]||['N/A',0];const worstYr=yrs[yrs.length-1]||['N/A',0];
     const spW=(p.eq*80).toFixed(0),efW=(p.eq*20).toFixed(0),agW=(p.bd*100).toFixed(0);
     const hasCF=cfSettings.contrib>0||cfSettings.withdraw>0||cfSettings.pctWithdraw>0;
-    h+='<tr class="'+(i===activePF?'active-row':'')+'"><td style="color:'+p.color+'">'+p.name+'</td><td>$'+bt.finalVal.toLocaleString(undefined,{maximumFractionDigits:0})+'</td><td style="color:'+(bt.pureAnnRet>=0?'var(--grn)':'var(--red)')+'">'+bt.pureAnnRet.toFixed(2)+'%</td><td>'+(hasCF?((bt.annRet>=0?'+':'')+bt.annRet.toFixed(2)+'%'):'\u2014')+'</td>'+(function(){const bm=getBenchMetrics();return '<td style="color:'+(bt.annVol<=bm.vol?'var(--grn)':'var(--red)')+'">'+bt.annVol.toFixed(1)+'%</td>'}())+'<td style="color:var(--red)">'+bt.maxDD.toFixed(1)+'%</td><td style="color:var(--grn)">'+bestYr[0]+': +'+bestYr[1].toFixed(1)+'%</td><td style="color:var(--red)">'+worstYr[0]+': '+worstYr[1].toFixed(1)+'%</td></tr>';
+    h+='<tr class="'+(i===activePF?'active-row':'')+'"><td style="color:'+p.color+'">'+p.name+'</td><td>$'+bt.finalVal.toLocaleString(undefined,{maximumFractionDigits:0})+'</td><td style="color:'+(bt.pureAnnRet>=0?'var(--grn)':'var(--red)')+'">'+bt.pureAnnRet.toFixed(2)+'%</td><td>'+(hasCF?((bt.annRet>=0?'+':'')+bt.annRet.toFixed(2)+'%'):'\u2014')+'</td>'+(function(){const bm=getBenchMetrics();return '<td style="color:'+(bt.annVol<=bm.vol?'var(--grn)':'var(--red)')+'">'+bt.annVol.toFixed(1)+'%</td>'}())+'<td style="color:var(--red)">'+bt.maxDD.toFixed(1)+'%<div style="font-size:9px;color:var(--g400)">'+fD(bt.maxDDDate)+'</div></td><td style="color:var(--grn)">'+bestYr[0]+': +'+bestYr[1].toFixed(1)+'%</td><td style="color:var(--red)">'+worstYr[0]+': '+worstYr[1].toFixed(1)+'%</td></tr>';
   });
   // Add benchmarks to comparison
   const spBT=getSP500Bench();const tbBT=getTBillBench();
@@ -729,7 +739,42 @@ function renderDD(){
   document.getElementById('dd-section').innerHTML=h;
 }
 
-function updateUI(){renderAsOf();renderPFSelector();renderStatus();renderZoom();drawChart();renderCompare();renderAnnual();renderDD()}
+
+function renderRollingRanges(){
+  const bt=getBT(activePF);const daily=bt.daily;
+  if(daily.length<504){document.getElementById('rolling-content').innerHTML='<div style="color:var(--g400);font-size:12px">Insufficient data for rolling return analysis.</div>';return}
+  const periods=[{label:'1 Year',yrs:1},{label:'3 Years',yrs:3},{label:'5 Years',yrs:5},{label:'10 Years',yrs:10},{label:'15 Years',yrs:15},{label:'20 Years',yrs:20}];
+  let h='<div style="margin-bottom:8px"><strong style="color:'+PORTFOLIOS[activePF].color+'">'+PORTFOLIOS[activePF].name+'</strong> portfolio — historical rolling annualized returns</div>';
+  h+='<div class="tbl-wrap" style="max-height:none"><table><thead><tr><th style="text-align:left">Period</th><th>Best</th><th>75th %ile</th><th>Median</th><th>25th %ile</th><th>Worst</th><th style="text-align:center">% Positive</th></tr></thead><tbody>';
+  periods.forEach(p=>{
+    const days=Math.round(p.yrs*252);
+    if(days>=daily.length){h+='<tr><td>'+p.label+'</td><td colspan="6" style="color:var(--g400);text-align:center">Insufficient data</td></tr>';return}
+    const rolls=[];
+    for(let i=days;i<daily.length;i+=5){
+      const startV=daily[i-days].v;const endV=daily[i].v;
+      if(startV>0){const ann=(Math.pow(endV/startV,1/p.yrs)-1)*100;rolls.push(ann)}
+    }
+    if(!rolls.length)return;
+    rolls.sort((a,b)=>a-b);
+    const pct=i=>rolls[Math.min(rolls.length-1,Math.floor(i*rolls.length/100))];
+    const best=rolls[rolls.length-1];const worst=rolls[0];
+    const med=pct(50);const p25=pct(25);const p75=pct(75);
+    const posP=(rolls.filter(r=>r>=0).length/rolls.length*100).toFixed(0);
+    h+='<tr>';
+    h+='<td>'+p.label+'</td>';
+    h+='<td style="color:var(--grn);font-weight:600">+'+best.toFixed(1)+'%</td>';
+    h+='<td style="color:var(--grn)">+'+p75.toFixed(1)+'%</td>';
+    h+='<td style="font-weight:600">'+med.toFixed(1)+'%</td>';
+    h+='<td style="color:'+(p25>=0?'var(--grn)':'var(--red)')+'">'+p25.toFixed(1)+'%</td>';
+    h+='<td style="color:var(--red);font-weight:600">'+worst.toFixed(1)+'%</td>';
+    h+='<td style="text-align:center"><span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:'+(parseInt(posP)>=95?'var(--grn-bg);color:var(--grn)':parseInt(posP)>=80?'var(--amb-bg);color:var(--amb)':'var(--red-bg);color:var(--red)')+'">'+posP+'%</span></td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  document.getElementById('rolling-content').innerHTML=h;
+}
+
+function updateUI(){renderAsOf();renderPFSelector();renderStatus();renderZoom();renderBenchToggles();drawChart();renderCompare();renderAnnual();renderDD()}
 populateStartDates();cfMode=true;updateUI();setupInteract();window.addEventListener('resize',drawChart);
 
 // CSV handling for portfolio dashboards

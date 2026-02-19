@@ -105,14 +105,17 @@ body.readonly .admin-only{display:none!important}
 </style>
 </head>
 <body>
-<div class="topbar"><div class="logo"><div class="logo-icon">HUB</div><div class="logo-text"><strong>HUB Retirement & Private Wealth</strong><span>Rebalance Monitor</span></div></div><div class="topbar-r">CRSPTM1 <span class="mode-badge mode-admin" id="mode-badge" onclick="toggleAdmin()">Admin Mode</span></div></div>
+<div class="topbar"><div class="logo"><div class="logo-icon">HUB</div><div class="logo-text"><strong>HUB Retirement & Private Wealth</strong><span>Rebalance Monitor</span></div></div><div class="topbar-r">CRSPTM1</div></div>
 <div class="wrap">
 <h2>Market Rebalance Monitor</h2>
 <div class="page-sub">Tracking the CRSP US Total Market Index to evaluate portfolio rebalancing opportunities based on a 10% drawdown methodology. Data from March 2011 (index inception) through present.</div>
 <div id="as-of" style="display:inline-block;background:var(--g100);border:1px solid var(--g200);border-radius:6px;padding:5px 12px;font-size:12px;color:var(--g600);margin-bottom:16px;font-weight:500"></div>
-<div class="admin-only" style="display:inline-block;margin-left:8px;margin-bottom:16px"><button class="btn btn-sm" onclick="exportDashboard()" style="background:var(--navy)">Export Read-Only Dashboard</button></div>
+<div style="display:inline-block;margin-left:8px;margin-bottom:16px"><button class="btn btn-sm" onclick="exportDashboard()" style="background:var(--navy)">Export Updated Dashboard</button></div>
 <div class="alert-bn" id="alert-bn"><div class="alert-ic" id="alert-ic"></div><div class="alert-body"><div class="alert-t" id="alert-t"></div><div class="alert-de" id="alert-de"></div><div class="alert-acts" id="alert-acts"></div></div></div>
 <div class="row" id="status-cards"></div>
+<div class="card"><div class="card-hdr"><div class="card-title">Rolling Annualized Returns <span class="section-toggle" data-section="sec-returns" onclick="toggleSection('sec-returns')">Hide</span></div></div>
+<div id="sec-returns"><div id="cal-returns"></div>
+</div></div>
 <div class="card" id="chart-card">
 <div class="card-hdr"><div class="card-title">Index Performance & Thresholds <span class="section-toggle" data-section="sec-chart" onclick="toggleSection('sec-chart')">Hide</span></div><button class="zoom-reset" id="zoom-reset" onclick="resetBrush()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 1 3 6.7"/><path d="M3 20v-7h7"/></svg>Reset Zoom</button></div>
 <div id="sec-chart"><div class="chart-ctrls"><div class="zoom-bar" id="zoom-bar"></div><div class="chart-hint" id="chart-hint">Click & drag on chart to zoom into a region</div></div>
@@ -387,7 +390,6 @@ function renderStatus(){const{all}=getView();const l=all[all.length-1];const pR=
     '<div class="card"><div class="lbl">All-Time High</div><div class="val val-xs">'+ath.toFixed(2)+'</div><div class="val-sub">'+fD(athD)+(athDaysAgo>0?' ('+athDaysAgo+' days ago)':' (today)')+'</div></div>'+
     '<div class="card"><div class="lbl">Current Drawdown</div><div class="val val-xs" style="color:'+(parseFloat(dd)<-5?'var(--red)':'var(--g600)')+'">'+dd+'%</div><div class="val-sub">From all-time high</div></div>'+
     '<div class="card"><div class="lbl">CRSPTM YTD Return</div><div class="val val-xs" style="color:'+(parseFloat(ytd)>=0?'var(--grn)':'var(--red)')+'">'+ytd+'%</div><div class="val-sub">'+yr+' open: '+ytdStart.toFixed(2)+'</div></div>'+
-    '+
     '<div class="card"><div class="lbl">Streak</div><div class="val val-xs" style="color:'+streakColor+'">'+streakTxt+'</div><div class="val-sub">Consecutive trading days</div></div>'+
     '<div class="card"><div class="lbl">Last Rebalance</div><div class="val val-xs">'+(lastRD?fD(lastRD):'None')+'</div><div class="val-sub">'+(dR!==null?dR+' days ago':'')+'</div></div>'+
     '<div class="card"><div class="lbl">Last Breakthrough</div><div class="val val-xs val-grn">'+(lastBD?fD(lastBD):'None')+'</div><div class="val-sub">'+(dB!==null?dB+' days ago':'')+'</div></div>';
@@ -595,8 +597,9 @@ function drawChart(){
   ctx.beginPath();ctx.strokeStyle='rgba(10,135,84,.45)';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);d.forEach((e,i)=>{i===0?ctx.moveTo(xS(i),yS(e.pb)):ctx.lineTo(xS(i),yS(e.pb))});ctx.stroke();ctx.setLineDash([]);
   ctx.beginPath();ctx.strokeStyle='rgba(192,57,43,.45)';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);d.forEach((e,i)=>{i===0?ctx.moveTo(xS(i),yS(e.pr)):ctx.lineTo(xS(i),yS(e.pr))});ctx.stroke();ctx.setLineDash([]);
   ctx.beginPath();ctx.strokeStyle='#00838a';ctx.lineWidth=2;d.forEach((e,i)=>{i===0?ctx.moveTo(xS(i),yS(e.c)):ctx.lineTo(xS(i),yS(e.c))});ctx.stroke();
-  // Event dots
-  d.forEach((e,i)=>{if(e.s==='B'){ctx.beginPath();ctx.arc(xS(i),yS(e.c),3,0,Math.PI*2);ctx.fillStyle='#0a8754';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.stroke()}else if(e.s==='R'){ctx.beginPath();ctx.arc(xS(i),yS(e.c),4.5,0,Math.PI*2);ctx.fillStyle='#c0392b';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke()}});
+  // Event dots - scale based on zoom level
+  const dotScale=Math.max(0.3,Math.min(1,500/d.length));
+  d.forEach((e,i)=>{if(e.s==='B'&&dotScale>0.5){ctx.beginPath();ctx.arc(xS(i),yS(e.c),1.5*dotScale,0,Math.PI*2);ctx.fillStyle='rgba(10,135,84,0.4)';ctx.fill()}else if(e.s==='R'){ctx.beginPath();ctx.arc(xS(i),yS(e.c),3.5*dotScale+1,0,Math.PI*2);ctx.fillStyle='#c0392b';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=0.8;ctx.stroke()}});
   // Annotation markers (triangles at top)
   d.forEach((e,i)=>{if(getAnn(e.d)){const x=xS(i),y=cPad.t+4;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-4,y-7);ctx.lineTo(x+4,y-7);ctx.closePath();ctx.fillStyle='var(--orange)';ctx.fill()}});
   // Policy start vertical line — only show if the view spans across the policy date
