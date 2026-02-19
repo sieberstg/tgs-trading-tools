@@ -40,7 +40,7 @@ canvas{width:100%!important;height:100%!important}
 .zoom-reset{display:none;align-items:center;gap:5px;background:var(--orange-lt);color:var(--orange);border:1px solid rgba(232,119,34,.3);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;transition:all .15s}.zoom-reset:hover{background:var(--orange);color:#fff}
 .zoom-reset svg{width:12px;height:12px}
 .section-toggle{font-size:11px;color:var(--g400);cursor:pointer;user-select:none;padding:2px 6px;border-radius:4px;transition:background .15s}.section-toggle:hover{background:var(--g100)}
-.section-body.collapsed{display:none}
+.collapsed{display:none}
 .stat-row{display:flex;gap:24px;flex-wrap:wrap;padding:8px 0}.stat-item{text-align:center}.stat-val{font-weight:700;font-size:18px;color:var(--navy)}.stat-lbl{font-size:10px;color:var(--g400);text-transform:uppercase;letter-spacing:.8px}
 .stat-hover{cursor:pointer;position:relative;border-bottom:1.5px dashed var(--g200);padding-bottom:2px;transition:border-color .2s}.stat-hover:hover{border-color:var(--teal)}
 .dd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;padding:8px 0}
@@ -74,6 +74,8 @@ tr:hover td{background:var(--g50)}
 <div class="page-sub">Historical analysis of the S&P 500 Index — daily data from January 1985 through present. Designed to provide context for client conversations about market volatility, drawdowns, and long-term returns.</div>
 <div id="as-of" style="display:inline-block;background:var(--g100);border:1px solid var(--g200);border-radius:6px;padding:5px 12px;font-size:12px;color:var(--g600);margin-bottom:16px;font-weight:500"></div>
 <div class="row" id="status-cards"></div>
+<div class="card"><div class="card-hdr"><div class="card-title">Rolling Annualized Returns <span class="section-toggle" data-section="sec-roll" onclick="toggleSection('sec-roll')">Hide</span></div></div>
+<div id="sec-roll"><div id="roll-returns"></div></div></div>
 <div class="card">
 <div class="card-hdr"><div class="card-title">S&P 500 Performance <span class="section-toggle" data-section="sec-chart" onclick="toggleSection('sec-chart')">Hide</span></div><button class="zoom-reset" id="zoom-reset" onclick="resetBrush()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 1 3 6.7"/><path d="M3 20v-7h7"/></svg>Reset Zoom</button></div>
 <div id="sec-chart">
@@ -100,8 +102,7 @@ tr:hover td{background:var(--g50)}
 <div class="card"><div class="card-hdr"><div class="card-title">Performance Insights <span class="section-toggle" data-section="sec-perf" onclick="toggleSection('sec-perf')">Hide</span></div></div>
 <div id="sec-perf"><div id="perf-hist"></div></div></div>
 
-<div class="card"><div class="card-hdr"><div class="card-title">Rolling Annualized Returns <span class="section-toggle" data-section="sec-roll" onclick="toggleSection('sec-roll')">Hide</span></div></div>
-<div id="sec-roll"><div id="roll-returns"></div></div></div>
+
 
 <div class="card admin-only"><div class="card-title" style="margin-bottom:4px">Update Data</div>
 <div style="font-size:11px;color:var(--g400);margin-bottom:10px">Step 1: <a href="https://www.wsj.com/market-data/quotes/index/SPX/historical-prices" target="_blank" style="color:var(--teal);text-decoration:none;font-weight:600">Download CSV from WSJ Historical Prices</a> &nbsp;Step 2: Drop it below</div>
@@ -111,6 +112,7 @@ tr:hover td{background:var(--g50)}
 <div style="font-size:11px;color:var(--g400);margin-top:4px">or click to browse</div>
 <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="handleCSV(this.files[0])">
 </div>
+<div style="margin-top:10px"><button class="btn btn-sm" onclick="exportDashboard()" style="background:var(--navy)">Export Updated Dashboard</button> <span style="font-size:10px;color:var(--g400)">Download HTML with latest data baked in for upload to GitHub</span></div>
 <div id="csv-status" style="display:none;font-size:12px;padding:8px 12px;border-radius:6px;margin-top:10px"></div>
 </div>
 
@@ -148,8 +150,8 @@ function filterByPreset(d){if(zoomRange==='ALL')return d;const ld=new Date(d[d.l
 function getView(){const all=getAllData();let f=filterByPreset(all);if(customRange&&brushSD&&brushED)f=f.filter(e=>e.d>=brushSD&&e.d<=brushED);return{all,filtered:f}}
 
 // Sections
-function toggleSection(id){const b=document.getElementById(id);if(!b)return;const c=b.classList.toggle('collapsed');const btn=document.querySelector('[data-section="'+id+'"]');if(btn)btn.textContent=c?'Show':'Hide';const st=JSON.parse(localStorage.getItem('sp500-sec')||'{}');st[id]=c;localStorage.setItem('sp500-sec',JSON.stringify(st))}
-function restoreSections(){const st=JSON.parse(localStorage.getItem('sp500-sec')||'{}');Object.entries(st).forEach(([id,c])=>{const b=document.getElementById(id);if(b&&c){b.classList.add('collapsed');const btn=document.querySelector('[data-section="'+id+'"]');if(btn)btn.textContent='Show'}})}
+function toggleSection(id){const b=document.getElementById(id);if(!b)return;const c=b.classList.toggle('collapsed');const btn=document.querySelector('[data-section="'+id+'"]');if(btn)btn.textContent=c?'Show':'Hide';try{const st=JSON.parse(localStorage.getItem('sp500-sec')||'{}');st[id]=c;localStorage.setItem('sp500-sec',JSON.stringify(st))}catch(e){}}
+function restoreSections(){try{const st=JSON.parse(localStorage.getItem('sp500-sec')||'{}');Object.entries(st).forEach(([id,c])=>{const b=document.getElementById(id);if(b&&c){b.classList.add('collapsed');const btn=document.querySelector('[data-section="'+id+'"]');if(btn)btn.textContent='Show'}})}catch(e){}}
 
 // Status cards
 function renderStatus(){
@@ -393,6 +395,21 @@ function renderRBHist(){
   if(recovered.length>0){const sorted=recovered.map(e=>({td:e.td,yr:e.date.substring(0,4)})).sort((a,b)=>a.td-b.td);const times=sorted.map(e=>e.td);const avg=Math.round(times.reduce((s,v)=>s+v,0)/times.length);const med=times.length%2===0?Math.round((times[times.length/2-1]+times[times.length/2])/2):times[Math.floor(times.length/2)];
     document.getElementById('recovery-stats').innerHTML='<div class="stat-item"><div class="stat-val">'+avg+'</div><div class="stat-lbl">Avg Days</div></div><div class="stat-item"><div class="stat-val">'+med+'</div><div class="stat-lbl">Median Days</div></div><div class="stat-item"><div class="stat-val">'+sorted[0].td+'</div><div class="stat-lbl">Fastest ('+sorted[0].yr+')</div></div><div class="stat-item"><div class="stat-val">'+sorted[sorted.length-1].td+'</div><div class="stat-lbl">Slowest ('+sorted[sorted.length-1].yr+')</div></div><div class="stat-item"><div class="stat-val">'+recovered.length+'/'+evts.length+'</div><div class="stat-lbl">Recovered</div></div>'}
   else{document.getElementById('recovery-stats').innerHTML='<div style="font-size:12px;color:var(--g400)">No recoveries yet.</div>'}
+}
+
+
+function exportDashboard(){
+  const allData=getAllData();
+  const dataJSON=JSON.stringify(allData);
+  let ex=document.documentElement.outerHTML;
+  ex=ex.replace(/const DATA=\[.*?\];/s,'const DATA='+dataJSON+';');
+  ex=ex.replace(/let userEntries=JSON\.parse\(localStorage\.getItem\('sp500-ue'\)\|\|'\[\]'\);/,"let userEntries=[];");
+  if(!ex.startsWith('<!DOCTYPE'))ex='<!DOCTYPE html>\n'+ex;
+  const blob=new Blob([ex],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  a.download='sp500_market_insights.html';a.click();
+  URL.revokeObjectURL(url);
 }
 
 function updateUI(){renderAsOf();renderStatus();renderZoom();drawChart();renderRBHist();renderBestDays();renderPerf();renderRolling()}

@@ -23,7 +23,7 @@ h2{font-size:20px;font-weight:700;margin-bottom:4px}.page-sub{color:var(--g400);
 .val-teal{color:var(--teal)}.val-grn{color:var(--grn)}.val-red{color:var(--red)}
 .val-sub{font-size:11px;color:var(--g400);margin-top:2px;font-weight:400}
 .section-toggle{font-size:11px;color:var(--g400);cursor:pointer;user-select:none;padding:2px 6px;border-radius:4px;transition:background .15s}.section-toggle:hover{background:var(--g100)}
-.section-body.collapsed{display:none}
+.collapsed{display:none}
 .stat-row{display:flex;gap:24px;flex-wrap:wrap;padding:8px 0}.stat-item{text-align:center}.stat-val{font-weight:700;font-size:18px;color:var(--navy)}.stat-lbl{font-size:10px;color:var(--g400);text-transform:uppercase;letter-spacing:.8px}
 .chart-ctrls{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:6px}
 .zoom-bar{display:flex;gap:4px;flex-wrap:wrap}
@@ -111,6 +111,25 @@ tr.active-row td{background:var(--teal-lt)}
 <div class="card"><div class="card-hdr"><div class="card-title">Worst Drawdowns <span class="section-toggle" data-section="sec-dd" onclick="toggleSection('sec-dd')">Hide</span></div></div>
 <div id="sec-dd"><div id="dd-section"></div></div></div>
 
+<div class="card">
+<div class="card-hdr"><div class="card-title">Update Data <span class="section-toggle" data-section="sec-update" onclick="toggleSection('sec-update')">Hide</span></div></div>
+<div id="sec-update">
+<div style="font-size:11px;color:var(--g400);margin-bottom:10px;line-height:1.5">
+Upload updated CSVs from WSJ to refresh the data. Upload each index separately — the system detects which one based on price ranges. Then click Export to generate an updated HTML file for GitHub.
+</div>
+<div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+<a href="https://www.wsj.com/market-data/quotes/index/SPX/historical-prices" target="_blank" style="color:var(--teal);font-size:11px;text-decoration:none;font-weight:600">S&P 500 CSV</a>
+<a href="https://www.wsj.com/market-data/quotes/EFA/historical-prices" target="_blank" style="color:var(--teal);font-size:11px;text-decoration:none;font-weight:600">EFA CSV</a>
+<a href="https://www.wsj.com/market-data/quotes/AGG/historical-prices" target="_blank" style="color:var(--teal);font-size:11px;text-decoration:none;font-weight:600">AGG CSV</a>
+</div>
+<div id="pf-drop-zone" style="border:2px dashed var(--g200);border-radius:10px;padding:20px;text-align:center;cursor:pointer;background:var(--g50)" onclick="document.getElementById('pf-csv-file').click()">
+<div style="font-size:13px;font-weight:600;color:var(--navy)">Drop any WSJ Historical Prices CSV here</div>
+<div style="font-size:11px;color:var(--g400);margin-top:4px">S&P 500, EFA, or AGG — auto-detected by price range</div>
+<input type="file" id="pf-csv-file" accept=".csv" style="display:none" onchange="handlePFCSV(this.files[0])">
+</div>
+<div id="pf-csv-status" style="display:none;font-size:12px;padding:8px 12px;border-radius:6px;margin-top:10px"></div>
+<div style="margin-top:10px"><button class="btn btn-sm" onclick="exportPFDashboard()" style="background:var(--navy)">Export Updated Dashboard</button> <span style="font-size:10px;color:var(--g400)">Download HTML with latest data for GitHub</span></div>
+</div></div>
 <div class="card" style="margin-top:20px;background:var(--g50)">
 <div class="card-title" style="margin-bottom:8px">Disclosures <span class="section-toggle" data-section="sec-disc" onclick="toggleSection('sec-disc')">Hide</span></div>
 <div id="sec-disc" style="font-size:11px;color:var(--g600);line-height:1.7">
@@ -403,7 +422,10 @@ function getBT(idx){
   return btCache[idx];
 }
 
-function toggleSection(id){const b=document.getElementById(id);if(!b)return;const c=b.classList.toggle('collapsed');const btn=document.querySelector('[data-section="'+id+'"]');if(btn)btn.textContent=c?'Show':'Hide'}
+
+function restoreSections(){try{const st=JSON.parse(localStorage.getItem('bt-sec')||'{}');Object.entries(st).forEach(([id,c])=>{const b=document.getElementById(id);if(b&&c){b.classList.add('collapsed');const btn=document.querySelector('[data-section="'+id+'"]');if(btn)btn.textContent='Show'}})}catch(e){}}
+
+function toggleSection(id){const b=document.getElementById(id);if(!b)return;const c=b.classList.toggle('collapsed');const btn=document.querySelector('[data-section="'+id+'"]');if(btn)btn.textContent=c?'Show':'Hide';try{const st=JSON.parse(localStorage.getItem('bt-sec')||'{}');st[id]=c;localStorage.setItem('bt-sec',JSON.stringify(st))}catch(e){}}
 
 function filterByPreset(daily){if(zoomRange==='ALL')return daily;const ld=new Date(daily[daily.length-1].d+'T12:00:00');let st;switch(zoomRange){case'1Y':st=new Date(ld);st.setFullYear(st.getFullYear()-1);break;case'3Y':st=new Date(ld);st.setFullYear(st.getFullYear()-3);break;case'5Y':st=new Date(ld);st.setFullYear(st.getFullYear()-5);break;case'10Y':st=new Date(ld);st.setFullYear(st.getFullYear()-10);break;case'20Y':st=new Date(ld);st.setFullYear(st.getFullYear()-20);break;case'YTD':st=new Date(ld.getFullYear(),0,1);break;default:return daily}return daily.filter(e=>e.d>=st.toISOString().split('T')[0])}
 
@@ -709,6 +731,86 @@ function renderDD(){
 
 function updateUI(){renderAsOf();renderPFSelector();renderStatus();renderZoom();drawChart();renderCompare();renderAnnual();renderDD()}
 populateStartDates();cfMode=true;updateUI();setupInteract();window.addEventListener('resize',drawChart);
+
+// CSV handling for portfolio dashboards
+function handlePFCSV(file){
+  if(!file)return;
+  const status=document.getElementById('pf-csv-status');
+  status.style.display='block';status.style.background='var(--blu-bg)';status.style.color='var(--blu)';
+  status.textContent='Reading '+file.name+'...';
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const lines=e.target.result.split('\n').map(l=>l.trim()).filter(l=>l);
+      let si=0;if(lines[0].toLowerCase().includes('date'))si=1;
+      const entries=[];
+      for(let i=si;i<lines.length;i++){
+        const parts=lines[i].split(',');if(parts.length<5)continue;
+        const ds=parts[0].trim();const close=parseFloat(parts[4].trim());
+        if(isNaN(close))continue;
+        const dp=ds.split('/');if(dp.length!==3)continue;
+        let yr=parseInt(dp[2]);if(yr<100)yr+=yr<50?2000:1900;
+        const iso=yr+'-'+dp[0].padStart(2,'0')+'-'+dp[1].padStart(2,'0');
+        entries.push({d:iso,c:close});
+      }
+      if(!entries.length){status.style.background='var(--red-bg)';status.style.color='var(--red)';status.textContent='No valid data found';return}
+      // Auto-detect: SP500 (1000+), AGG (80-120), EFA (20-110)
+      const avgPrice=entries.reduce((s,e)=>s+e.c,0)/entries.length;
+      let asset='';
+      if(avgPrice>500){asset='sp';status.textContent='Detected: S&P 500 (avg price: '+avgPrice.toFixed(0)+')'}
+      else if(avgPrice>50&&avgPrice<130){
+        // Could be EFA or AGG - check recent prices
+        const recent=entries.slice(-100);
+        const recentAvg=recent.reduce((s,e)=>s+e.c,0)/recent.length;
+        if(recentAvg>95&&recentAvg<115){asset='ag';status.textContent='Detected: AGG (avg price: '+avgPrice.toFixed(0)+')'}
+        else{asset='ef';status.textContent='Detected: EFA (avg price: '+avgPrice.toFixed(0)+')'}
+      }
+      else{asset='ef';status.textContent='Detected: EFA (avg price: '+avgPrice.toFixed(0)+')'}
+      // Merge into DATA
+      const dateMap=new Map();DATA.forEach((e,i)=>dateMap.set(e.d,i));
+      let added=0,updated=0;
+      entries.forEach(e=>{
+        if(dateMap.has(e.d)){
+          const idx=dateMap.get(e.d);
+          if(Math.abs(DATA[idx][asset]-e.c)>0.01){DATA[idx][asset]=e.c;updated++}
+        }else{
+          // New date - need all 3 prices. Use nearest known date for missing ones
+          const nearest=DATA.reduce((best,d)=>Math.abs(d.d.localeCompare(e.d))<Math.abs(best.d.localeCompare(e.d))?d:best);
+          const newEntry={d:e.d,sp:nearest.sp,ef:nearest.ef,ag:nearest.ag};
+          newEntry[asset]=e.c;
+          DATA.push(newEntry);added++;
+        }
+      });
+      DATA.sort((a,b)=>a.d.localeCompare(b.d));
+      // Clear caches
+      btCache={};sp500Bench=null;tbillBench=null;benchMetrics=null;
+      if(typeof efaBench!=='undefined')efaBench=null;
+      if(typeof aggBench!=='undefined')aggBench=null;
+      updateUI();
+      status.style.background='var(--grn-bg)';status.style.color='var(--grn)';
+      status.textContent='✓ '+asset.toUpperCase()+': '+entries.length+' rows ('+added+' new, '+updated+' updated). Total: '+DATA.length+' days.';
+    }catch(err){status.style.background='var(--red-bg)';status.style.color='var(--red)';status.textContent='Error: '+err.message}
+  };reader.readAsText(file);
+}
+function exportPFDashboard(){
+  const dataJSON=JSON.stringify(DATA);
+  let ex=document.documentElement.outerHTML;
+  ex=ex.replace(/const DATA=\[.*?\];/s,'const DATA='+dataJSON+';');
+  if(!ex.startsWith('<!DOCTYPE'))ex='<!DOCTYPE html>\n'+ex;
+  const blob=new Blob([ex],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  const fname=document.title.toLowerCase().includes('backtest')?'portfolio_backtest_modeler.html':'portfolio_performance.html';
+  a.download=fname;a.click();URL.revokeObjectURL(url);
+}
+// Drop zone events
+const pfDZ=document.getElementById('pf-drop-zone');
+if(pfDZ){
+  pfDZ.addEventListener('dragover',e=>{e.preventDefault();pfDZ.style.borderColor='var(--teal)';pfDZ.style.background='var(--teal-lt)'});
+  pfDZ.addEventListener('dragleave',e=>{e.preventDefault();pfDZ.style.borderColor='var(--g200)';pfDZ.style.background='var(--g50)'});
+  pfDZ.addEventListener('drop',e=>{e.preventDefault();pfDZ.style.borderColor='var(--g200)';pfDZ.style.background='var(--g50)';if(e.dataTransfer.files.length)handlePFCSV(e.dataTransfer.files[0])});
+}
+
 document.querySelectorAll('#sec-cashflow input').forEach(inp=>{inp.addEventListener('keydown',e=>{if(e.key==='Enter')applyCashFlow()})});
 
 </script>
