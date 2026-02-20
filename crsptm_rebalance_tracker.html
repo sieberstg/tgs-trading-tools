@@ -858,7 +858,7 @@ function handleCSV(file){
       status.textContent='✓ Imported '+newEntries.length+' rows ('+added+' new, '+updated+' updated, '+skipped+' skipped). Total: '+getAllData().length+' entries.';
       updateUI();
       // Auto-set next date
-      const allD=getAllData();if(allD.length){const l=new Date(allD[allD.length-1].d+'T12:00:00');l.setDate(l.getDate()+1);while(l.getDay()===0||l.getDay()===6)l.setDate(l.getDate()+1);document.getElementById('inp-date').value=l.toISOString().split('T')[0]}
+      try{const allD=getAllData();if(allD.length){const l=new Date(allD[allD.length-1].d+'T12:00:00');l.setDate(l.getDate()+1);while(l.getDay()===0||l.getDay()===6)l.setDate(l.getDate()+1);document.getElementById('inp-date').value=l.toISOString().split('T')[0]}}catch(e){}
     }catch(err){
       status.style.background='var(--red-bg)';status.style.color='var(--red)';
       status.textContent='Error parsing CSV: '+err.message;
@@ -874,9 +874,9 @@ dz.addEventListener('dragleave',e=>{e.preventDefault();dz.style.borderColor='rgb
 dz.addEventListener('drop',e=>{e.preventDefault();dz.style.borderColor='rgba(255,255,255,.3)';dz.style.background='none';if(e.dataTransfer.files.length)handleCSV(e.dataTransfer.files[0])});
 }
 
-const allD=getAllData();if(allD.length){const l=new Date(allD[allD.length-1].d+'T12:00:00');l.setDate(l.getDate()+1);while(l.getDay()===0||l.getDay()===6)l.setDate(l.getDate()+1);document.getElementById('inp-date').value=l.toISOString().split('T')[0]}
-document.getElementById('inp-close').addEventListener('keydown',e=>{if(e.key==='Enter')addEntry()});
-document.getElementById('ann-text').addEventListener('keydown',e=>{if(e.key==='Enter')addAnnotation()});
+try{const allD=getAllData();if(allD.length){const l=new Date(allD[allD.length-1].d+'T12:00:00');l.setDate(l.getDate()+1);while(l.getDay()===0||l.getDay()===6)l.setDate(l.getDate()+1);document.getElementById('inp-date').value=l.toISOString().split('T')[0]}}catch(e){}
+const inpCloseEl=document.getElementById('inp-close');if(inpCloseEl)inpCloseEl.addEventListener('keydown',e=>{if(e.key==='Enter')addEntry()});
+const annTextEl=document.getElementById('ann-text');if(annTextEl)annTextEl.addEventListener('keydown',e=>{if(e.key==='Enter')addAnnotation()});
 
 
 
