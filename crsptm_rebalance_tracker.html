@@ -868,9 +868,11 @@ function handleCSV(file){
 }
 // Drag and drop
 const dz=document.getElementById('drop-zone');
-dz.addEventListener('dragover',e=>{e.preventDefault();dz.style.borderColor='var(--teal)';dz.style.background='var(--teal-lt)'});
-dz.addEventListener('dragleave',e=>{e.preventDefault();dz.style.borderColor='var(--g200)';dz.style.background='var(--g50)'});
-dz.addEventListener('drop',e=>{e.preventDefault();dz.style.borderColor='var(--g200)';dz.style.background='var(--g50)';if(e.dataTransfer.files.length)handleCSV(e.dataTransfer.files[0])});
+if(dz){
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.style.borderColor='rgba(255,255,255,.6)';dz.style.background='rgba(255,255,255,.1)'});
+dz.addEventListener('dragleave',e=>{e.preventDefault();dz.style.borderColor='rgba(255,255,255,.3)';dz.style.background='none'});
+dz.addEventListener('drop',e=>{e.preventDefault();dz.style.borderColor='rgba(255,255,255,.3)';dz.style.background='none';if(e.dataTransfer.files.length)handleCSV(e.dataTransfer.files[0])});
+}
 
 const allD=getAllData();if(allD.length){const l=new Date(allD[allD.length-1].d+'T12:00:00');l.setDate(l.getDate()+1);while(l.getDay()===0||l.getDay()===6)l.setDate(l.getDate()+1);document.getElementById('inp-date').value=l.toISOString().split('T')[0]}
 document.getElementById('inp-close').addEventListener('keydown',e=>{if(e.key==='Enter')addEntry()});
