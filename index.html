@@ -86,6 +86,34 @@ h1{font-size:28px;font-weight:700;margin-bottom:6px}
 
 </div>
 
+
+<div class="section-label" style="margin-top:32px">Research</div>
+<div class="grid">
+<a href="market_timing_research.html" class="tool-card">
+<span class="tool-arrow">→</span>
+<div class="tool-icon">📝</div>
+<div class="tool-title">The Real Cost of Market Timing</div>
+<div class="tool-desc">What actually happens when investors sell during downturns? Five investor personas — from the hair-trigger reactive seller to the buy-and-hold benchmark — modeled across 41 years of S&P 500 data. Interactive growth charts, trade logs, and the surprising finding about disciplined timing strategies.</div>
+<div class="tool-tags"><span class="tag">Research</span><span class="tag">Behavioral Finance</span><span class="tag">41 Years</span></div>
+</a>
+
+<a href="markets_dont_vote.html" class="tool-card">
+<span class="tool-arrow">→</span>
+<div class="tool-icon">🗳️</div>
+<div class="tool-title">Markets Don't Vote</div>
+<div class="tool-desc">What happens when investors let politics or geopolitics drive their decisions? Blue-Only Brenda, Red-Only Ron, and Peacetime Pat modeled across 41 years of data. Interactive charts and advisor conversation scripts.</div>
+<div class="tool-tags"><span class="tag">Research</span><span class="tag">Political Timing</span><span class="tag">41 Years</span></div>
+</a>
+
+<a href="portfolio_benchmark.html" class="tool-card">
+<span class="tool-arrow">→</span>
+<div class="tool-icon">📊</div>
+<div class="tool-title">Portfolio Benchmark Tool</div>
+<div class="tool-desc">Build custom benchmarks from S&P 500, EFA, and AGG index weights with adjustable expense ratios. Compare against actual portfolio performance via CSV upload. Preset allocations from 100/0 to 40/60.</div>
+<div class="tool-tags"><span class="tag">Tool</span><span class="tag">Benchmarking</span><span class="tag">22 Years</span></div>
+</a>
+</div>
+
 <div class="foot">
 <div style="margin-bottom:6px"><strong>Data Sources:</strong> CRSP US Total Market Index, S&P 500 Index, iShares MSCI EAFE ETF (EFA), iShares Core US Aggregate Bond ETF (AGG) — all via WSJ Historical Prices.</div>
 <div style="margin-bottom:6px">All tools are for informational and internal use only. Not investment advice. Past performance does not guarantee future results.</div>
@@ -94,7 +122,7 @@ h1{font-size:28px;font-weight:700;margin-bottom:6px}
 </div>
 <script>
 // Cache-busting: append version timestamp to all dashboard links
-const cacheBust='v=202603051351';
+const cacheBust='v=202603102002';
 document.querySelectorAll('.tool-card').forEach(a=>{
   a.href=a.href.split('?')[0]+'?'+cacheBust;
 });
