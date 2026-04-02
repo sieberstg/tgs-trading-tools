@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HUB RPW Investment Tools</title>
+<title>TGS Trading Tools</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#faf9f6;--paper:#fff;--ink:#1a1a2e;--ink2:#4a4a5a;--ink3:#8a8a9a;--teal:#00838a;--navy:#1a2b4a;--orange:#e87722;--border:#e8e6e1;--shadow:0 2px 12px rgba(0,0,0,.06)}
@@ -31,11 +31,11 @@ h1{font-family:'Source Serif 4',serif;font-size:32px;font-weight:700;color:var(-
 </head>
 <body>
 <div class="topbar">
-<div class="logo"><div class="logo-icon">HUB</div><div class="logo-text">HUB RPW Investment Tools</div></div>
+<div class="logo"><div class="logo-icon">TGS</div><div class="logo-text">TGS Trading Tools</div></div>
 </div>
 <div class="wrap">
 <h1>Investment Tools Suite</h1>
-<div class="subtitle">Client-facing dashboards, research, and analytics</div>
+<div class="subtitle">Dashboards, research, and analytics on historical market trends and data</div>
 <div class="grid">
 
 <a href="portfolio_dashboard.html" class="tool-card">
@@ -105,13 +105,17 @@ h1{font-family:'Source Serif 4',serif;font-size:32px;font-weight:700;color:var(-
 </div>
 </div>
 
+<div style="margin-top:24px;padding:16px 20px;background:#fdecea;border:1px solid #e8c4c0;border-radius:8px;font-size:10px;color:#4a4a5a;line-height:1.7">
+<strong style="color:#c0392b">IMPORTANT DISCLAIMER — FOR INTERNAL USE ONLY</strong><br>
+This tool and its contents are intended solely for internal educational and analytical purposes. Nothing presented here constitutes investment advice, a recommendation to buy or sell any security, or a solicitation of any kind. All data, scenarios, projections, and calculations are hypothetical, back-tested, or modeled using historical information and are subject to significant limitations. Hypothetical results are developed with the benefit of hindsight and do not account for actual trading, liquidity constraints, market impact, taxes, transaction costs, or other factors that would affect real-world results. Past performance is not indicative of future results. All investing involves risk, including the possible loss of principal. Index returns are shown for illustrative purposes only; indexes cannot be invested in directly and do not reflect fees or expenses. The creator of this tool is not a registered investment advisor and does not provide personalized financial advice. Any resemblance to a specific investment strategy or product is coincidental. <strong>Do not rely on this information for making investment decisions.</strong> Consult a qualified financial professional before making any changes to your investment strategy.
+</div>
 <div class="foot">
-<p>HUB Retirement and Private Wealth &middot; <a href="https://www.hubinternational.com/products/retirement-private-wealth/" target="_blank">hubinternational.com</a></p>
-<p style="margin-top:4px">Investment advisory services offered through HUB Investment Partners LLC, an SEC-registered investment advisor.</p>
+<p>TGS &middot; <a href="https://www.hubinternational.com/products/retirement-private-wealth/" target="_blank">hubinternational.com</a></p>
+<p style="margin-top:4px">Investment advisory services offered through TGS LLC, an SEC-registered investment advisor.</p>
 </div>
 
 <script>
-const cacheBust='v=202604021437';
+const cacheBust='v=202604021450';
 document.querySelectorAll('.tool-card').forEach(function(a){
 var href=a.getAttribute('href');
 if(href&&href.indexOf('?')<0)a.setAttribute('href',href+'?'+cacheBust);
