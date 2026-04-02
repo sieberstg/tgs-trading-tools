@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HUB RPW Investment Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#faf9f6;--paper:#fff;--ink:#1a1a2e;--ink2:#4a4a5a;--ink3:#8a8a9a;--teal:#00838a;--navy:#1a2b4a;--orange:#e87722;--border:#e8e6e1;--shadow:0 2px 12px rgba(0,0,0,.06)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif}
+.topbar{background:var(--navy);padding:18px 24px;display:flex;align-items:center;gap:12px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:40px;height:40px;background:var(--orange);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:16px}
+.logo-text{color:#fff;font-family:'Source Serif 4',serif;font-size:18px;font-weight:600}
+.wrap{max-width:900px;margin:0 auto;padding:40px 24px}
+h1{font-family:'Source Serif 4',serif;font-size:32px;font-weight:700;color:var(--navy);margin-bottom:8px;text-align:center}
+.subtitle{text-align:center;color:var(--ink3);font-size:14px;margin-bottom:32px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.tool-card{display:block;background:var(--paper);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:var(--shadow);text-decoration:none;color:var(--ink);transition:all .15s;position:relative}
+.tool-card:hover{border-color:var(--teal);transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.1)}
+.tool-arrow{position:absolute;top:16px;right:16px;color:var(--ink3);font-size:18px}
+.tool-icon{font-size:28px;margin-bottom:8px}
+.tool-title{font-family:'Source Serif 4',serif;font-size:17px;font-weight:600;color:var(--navy);margin-bottom:6px}
+.tool-desc{font-size:12px;color:var(--ink2);line-height:1.6;margin-bottom:10px}
+.tool-tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:9px;padding:2px 8px;border-radius:4px;background:var(--bg);color:var(--ink3);border:1px solid var(--border);text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.foot{text-align:center;padding:32px 24px;font-size:11px;color:var(--ink3);border-top:1px solid var(--border);margin-top:32px}
+.foot a{color:var(--teal);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+<div class="logo"><div class="logo-icon">HUB</div><div class="logo-text">HUB RPW Investment Tools</div></div>
+</div>
+<div class="wrap">
+<h1>Investment Tools Suite</h1>
+<div class="subtitle">Client-facing dashboards, research, and analytics</div>
+<div class="grid">
+
+<a href="portfolio_dashboard.html" class="tool-card">
+<span class="tool-arrow">&rarr;</span>
+<div class="tool-icon">&#128200;</div>
+<div class="tool-title">Daily Portfolio Dashboard</div>
+<div class="tool-desc">Morning snapshot of all nine model portfolios. Returns across 1D, 1W, 1M, YTD, 1Y, 3Y, 5Y, 10Y with risk metrics, interactive chart, and event-period comparisons.</div>
+<div class="tool-tags"><span class="tag">Dashboard</span><span class="tag">Daily</span><span class="tag">Risk Metrics</span></div>
+</a>
+
+<a href="crsptm_rebalance_tracker.html" class="tool-card">
+<span class="tool-arrow">&rarr;</span>
+<div class="tool-icon">&#128202;</div>
+<div class="tool-title">CRSPTM 10% Rebalance Monitor</div>
+<div class="tool-desc">Tracks CRSP Total Market Index with 10% rebalance trigger zones, historical annotations, and drawdown analysis.</div>
+<div class="tool-tags"><span class="tag">Monitor</span><span class="tag">CRSP</span><span class="tag">Rebalance</span></div>
+</a>
+
+<a href="sp500_market_insights.html" class="tool-card">
+<span class="tool-arrow">&rarr;</span>
+<div class="tool-icon">&#128201;</div>
+<div class="tool-title">S&P 500 Market Insights</div>
+<div class="tool-desc">41+ years of S&P 500 data with drawdown analysis, rolling returns, historical corrections, and bear market context.</div>
+<div class="tool-tags"><span class="tag">Analysis</span><span class="tag">S&P 500</span><span class="tag">41 Years</span></div>
+</a>
+
+<a href="portfolio_performance.html" class="tool-card">
+<span class="tool-arrow">&rarr;</span>
+<div class="tool-icon">&#128176;</div>
+<div class="tool-title">Portfolio Performance</div>
+<div class="tool-desc">Multi-asset portfolio tracker with S&P 500, EFA, and AGG. Allocation comparison, growth charts, and drawdown analysis.</div>
+<div class="tool-tags"><span class="tag">Portfolio</span><span class="tag">Multi-Asset</span><span class="tag">22 Years</span></div>
+</a>
+
+<a href="portfolio_backtest_modeler.html" class="tool-card">
+<span class="tool-arrow">&rarr;</span>
+<div class="tool-icon">&#128300;</div>
+<div class="tool-title">Portfolio Backtest Modeler</div>
+<div class="tool-desc">Custom allocation backtesting with adjustable equity/bond splits, contribution modeling, and scenario analysis.</div>
+<div class="tool-tags"><span class="tag">Backtest</span><span class="tag">Custom</span><span class="tag">Scenarios</span></div>
+</a>
+
+<a href="portfolio_benchmark.html" class="tool-card">
+<span class="tool-arrow">&rarr;</span>
+<div class="tool-icon">&#128203;</div>
+<div class="tool-title">Portfolio Benchmark Tool</div>
+<div class="tool-desc">Build custom benchmarks from model portfolios with MEP-specific expense ratios. Multi-select, time periods, and CSV upload for actual vs benchmark comparison.</div>
+<div class="tool-tags"><span class="tag">Benchmark</span><span class="tag">MEP</span><span class="tag">Comparison</span></div>
+</a>
+
+<a href="market_timing_research.html" class="tool-card">
+<span class="tool-arrow">&rarr;</span>
+<div class="tool-icon">&#128214;</div>
+<div class="tool-title">The Real Cost of Market Timing</div>
+<div class="tool-desc">Interactive research piece: five investor personas across 41 years, behavioral alpha framework, advisor value proposition, and build-your-own-investor simulator.</div>
+<div class="tool-tags"><span class="tag">Research</span><span class="tag">Behavioral</span><span class="tag">41 Years</span></div>
+</a>
+
+<a href="markets_dont_vote.html" class="tool-card">
+<span class="tool-arrow">&rarr;</span>
+<div class="tool-icon">&#128499;</div>
+<div class="tool-title">Markets Don't Vote</div>
+<div class="tool-desc">What happens when investors let politics or geopolitics drive decisions? Blue-Only Brenda, Red-Only Ron, and Peacetime Pat across 41 years.</div>
+<div class="tool-tags"><span class="tag">Research</span><span class="tag">Political Timing</span><span class="tag">41 Years</span></div>
+</a>
+
+</div>
+</div>
+
+<div class="foot">
+<p>HUB Retirement and Private Wealth &middot; <a href="https://www.hubinternational.com/products/retirement-private-wealth/" target="_blank">hubinternational.com</a></p>
+<p style="margin-top:4px">Investment advisory services offered through HUB Investment Partners LLC, an SEC-registered investment advisor.</p>
+</div>
+
+<script>
+const cacheBust='v=202604021437';
+document.querySelectorAll('.tool-card').forEach(function(a){
+var href=a.getAttribute('href');
+if(href&&href.indexOf('?')<0)a.setAttribute('href',href+'?'+cacheBust);
+});
+</script>
+</body>
+</html>
