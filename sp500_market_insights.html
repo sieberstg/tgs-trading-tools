@@ -71,6 +71,11 @@ tr:hover td{background:var(--g50)}
 .update-bar-inner{max-width:1080px;margin:0 auto}
 .update-toggle{color:rgba(255,255,255,.6);font-size:10px;cursor:pointer;padding:3px 8px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:none;font-family:Inter,sans-serif;transition:all .15s}
 .update-toggle:hover{color:#fff;border-color:rgba(255,255,255,.5)}
+.yo-chips{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0 10px}
+.yo-chip{border:1.5px solid var(--g200);background:var(--wh);color:var(--g600);padding:3px 8px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;transition:all .12s;user-select:none}
+.yo-chip:hover{border-color:var(--teal)}
+.yo-chip.on{color:#fff;border-color:transparent}
+.yo-sw{display:inline-block;width:16px;height:0;border-top:3px solid;margin-right:7px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -122,6 +127,16 @@ Drop CSV here or click to browse
 
 
 
+
+<div class="card"><div class="card-hdr"><div class="card-title">Year Overlay: Compare Any Years <span class="section-toggle" data-section="sec-yo" onclick="toggleSection('sec-yo')">Hide</span></div></div>
+<div id="sec-yo">
+<div style="font-size:11px;color:var(--g400);margin-bottom:10px;line-height:1.5" id="yo-note"></div>
+<div class="chart-ctrls"><div class="zoom-bar" id="yo-mode"></div><div class="zoom-bar" id="yo-presets"></div></div>
+<div class="yo-chips" id="yo-chips"></div>
+<div class="chart-wrap" id="yo-wrap"><canvas id="yo-canvas"></canvas><div class="tt" id="yo-tt"></div></div>
+<div class="tbl-wrap" id="yo-tbl"></div>
+<div style="font-size:10px;color:var(--g400);margin-top:8px;line-height:1.6" id="yo-foot"></div>
+</div></div>
 
 <div class="card" style="margin-top:20px;background:var(--g50);border:1px solid var(--g200)">
 <div class="card-title" style="margin-bottom:8px">Disclosures <span class="section-toggle" data-section="sec-disc" onclick="toggleSection('sec-disc')">Hide</span></div>
@@ -424,8 +439,143 @@ function exportDashboard(){
   URL.revokeObjectURL(url);
 }
 
-function updateUI(){renderAsOf();renderStatus();renderZoom();drawChart();renderRBHist();renderBestDays();renderPerf();renderRolling()}
-updateUI();setupInteract();restoreSections();window.addEventListener('resize',drawChart);
+// Year overlay
+const YO_PAL=['#c0392b','#e87722','#0a8754','#6d28d9','#b45309','#be185d','#0e7490','#4d7c0f','#64748b'];
+const YO_DASH=[[],[6,3],[2,3],[8,3,2,3]];
+const YO_KEY='sp500-yo';
+const YO_MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const YO_MST=[1,32,60,91,121,152,182,213,244,274,305,335];
+let yoM=null,yoSel=null,yoMode='fwd',yoHov=null,yoPts=[],yoGeo=null;
+function yoColor(y){return yoM&&y===yoM.cur?'#2563eb':YO_PAL[(y-1986)%9]}
+function yoDash(y){return yoM&&y===yoM.cur?[]:YO_DASH[Math.floor((y-1986)/9)%4]}
+function yoPct(v,d){return v==null?'n/a':(v>=0?'+':'')+(v*100).toFixed(d==null?1:d)+'%'}
+function yoClr(v){return v==null?'var(--g400)':v>=0?'var(--grn)':'var(--red)'}
+function yoDoy(d){const p=d.split('-');return Math.round((Date.UTC(+p[0],+p[1]-1,+p[2])-Date.UTC(+p[0],0,0))/86400000)}
+function yoNice(r){const raw=r/6,mag=Math.pow(10,Math.floor(Math.log10(raw))),nm=raw/mag;return(nm<=1?1:nm<=2?2:nm<=5?5:10)*mag}
+function yoModel(){
+  const all=getAllData(),n=all.length,last=all[n-1],md=last.d.substring(5),cur=+last.d.substring(0,4);
+  const idx={};all.forEach((e,i)=>{const y=+e.d.substring(0,4);if(!idx[y])idx[y]={s:i,e:i};idx[y].e=i});
+  const yrs={};
+  for(let y=1986;y<=cur;y++){
+    const b=idx[y],pb=idx[y-1];if(!b||!pb)continue;
+    const base=all[pb.e].c,tgt=y+'-'+md;let ai=b.s;
+    for(let i=b.s;i<=b.e;i++){if(all[i].d<=tgt)ai=i;else break}
+    const w=[];for(let i=b.s;i<=ai;i++)w.push(all[i].c);
+    const c0=all[ai].c,pk=Math.max.apply(null,w);
+    let peak=base,mdd=0;w.forEach(c=>{if(c>peak)peak=c;mdd=Math.min(mdd,c/peak-1)});
+    const r=[];for(let k=1;k<w.length;k++)r.push(Math.log(w[k]/w[k-1]));
+    const mu=r.length?r.reduce((a,v)=>a+v,0)/r.length:0;
+    const vol=r.length>1?Math.sqrt(r.reduce((a,v)=>a+(v-mu)*(v-mu),0)/(r.length-1))*Math.sqrt(252):0;
+    const o={y,base,s:b.s,e:b.e,ai,c0,ytd:c0/base-1,runup:pk/base-1,curdd:c0/pk-1,mdd,vol,f3:null,f12:null,fw:null};
+    if(y<cur){
+      if(ai+63<n)o.f3=all[ai+63].c/c0-1;
+      if(ai+252<n){o.f12=all[ai+252].c/c0-1;let lo=c0;for(let j=ai;j<=ai+252;j++)if(all[j].c<lo)lo=all[j].c;o.fw=lo/c0-1}
+    }
+    yrs[y]=o;
+  }
+  return{all,n,last,md,cur,yrs};
+}
+function yoAnalogs(N){
+  const m=yoM,t=m.yrs[m.cur];if(!t)return[];
+  const hist=Object.values(m.yrs).filter(o=>o.y<m.cur),ks=['ytd','runup','curdd','mdd','vol'];
+  if(hist.length<5)return[];
+  const sd={};ks.forEach(k=>{const v=hist.map(o=>o[k]),mu=v.reduce((a,x)=>a+x,0)/v.length;sd[k]=Math.sqrt(v.reduce((a,x)=>a+(x-mu)*(x-mu),0)/v.length)||1});
+  return hist.map(o=>({y:o.y,d:Math.sqrt(ks.reduce((a,k)=>a+Math.pow((o[k]-t[k])/sd[k],2),0))})).sort((a,b)=>a.d-b.d).slice(0,N).map(o=>o.y);
+}
+function yoMulti(){
+  const a=yoM.all,n=a.length,eps=[];let pk=0,inD=false,tr=0;
+  for(let k=1;k<n;k++){
+    if(!inD){if(a[k].c>a[pk].c)pk=k;if(a[k].c/a[pk].c-1<=-0.09){inD=true;tr=k}}
+    else{if(a[k].c<a[tr].c)tr=k;if(a[k].c/a[tr].c-1>=0.10){eps.push(tr);inD=false;let mx=tr;for(let j=tr;j<=k;j++)if(a[j].c>a[mx].c)mx=j;pk=mx}}
+  }
+  if(inD)eps.push(tr);
+  const by={};eps.forEach(t=>{const y=+a[t].d.substring(0,4);by[y]=(by[y]||0)+1});
+  return Object.keys(by).filter(y=>by[y]>=2&&yoM.yrs[y]).map(Number);
+}
+function yoSave(){try{localStorage.setItem(YO_KEY,JSON.stringify({sel:Array.from(yoSel),mode:yoMode}))}catch(e){}}
+function yoToggle(y){if(yoSel.has(y))yoSel.delete(y);else yoSel.add(y);yoSave();yoRender()}
+function yoPreset(k){const m=yoM;let l=[];if(k==='analog')l=[m.cur].concat(yoAnalogs(4));else if(k==='multi')l=[m.cur].concat(yoMulti());else if(k==='cur')l=[m.cur];yoSel=new Set(l.filter(y=>m.yrs[y]));yoSave();yoRender()}
+function yoSetMode(md){yoMode=md;yoSave();yoRender()}
+function yoRefresh(){
+  yoM=yoModel();
+  if(yoSel===null){
+    let sv=null;try{sv=JSON.parse(localStorage.getItem(YO_KEY)||'null')}catch(e){}
+    if(sv&&Array.isArray(sv.sel)){yoSel=new Set(sv.sel.filter(y=>yoM.yrs[y]));if(sv.mode==='cal'||sv.mode==='fwd')yoMode=sv.mode}
+    else yoSel=new Set([yoM.cur].concat(yoAnalogs(4)).filter(y=>yoM.yrs[y]));
+  }else yoSel=new Set(Array.from(yoSel).filter(y=>yoM.yrs[y]));
+  yoRender();
+}
+function yoRender(){
+  const m=yoM,al=fS(m.last.d);
+  document.getElementById('yo-note').innerHTML='Each line is the S&P 500 indexed to 100 at the prior year-end, so a reading of 90 means 10% below where that year started. Click any year to add or remove it, and hover a line for values. <strong>Closest analogs</strong> ranks every past year against '+m.cur+' on return to date, peak run-up, drawdown from the high, worst drawdown, and volatility through the same calendar date ('+al+').';
+  document.getElementById('yo-mode').innerHTML='<button class="zoom-btn'+(yoMode==='fwd'?' active':'')+'" onclick="yoSetMode(\'fwd\')">Through '+al+' + next 12 months</button><button class="zoom-btn'+(yoMode==='cal'?' active':'')+'" onclick="yoSetMode(\'cal\')">Calendar year</button>';
+  document.getElementById('yo-presets').innerHTML='<button class="zoom-btn" onclick="yoPreset(\'analog\')">Closest analogs</button><button class="zoom-btn" onclick="yoPreset(\'multi\')">Multi-decline years</button><button class="zoom-btn" onclick="yoPreset(\'cur\')">'+m.cur+' only</button><button class="zoom-btn" onclick="yoPreset(\'none\')">Clear</button>';
+  let h='';for(let y=1986;y<=m.cur;y++){if(!m.yrs[y])continue;const on=yoSel.has(y),c=yoColor(y);
+    h+='<button class="yo-chip'+(on?' on':'')+'" aria-pressed="'+on+'" style="'+(on?'background:'+c:'border-left:4px solid '+c)+'" onclick="yoToggle('+y+')">'+y+(y===m.cur?' YTD':'')+'</button>'}
+  document.getElementById('yo-chips').innerHTML=h;
+  document.getElementById('yo-foot').innerHTML='Index = close divided by the prior year-end close, times 100. Next 3 / 12 months = 63 / 252 trading days after the '+al+' anchor date; worst point = lowest close in that 12-month window versus the anchor close. Closing prices only. Historical comparisons are illustrative and are not a forecast.';
+  yoDraw();yoTable();
+}
+function yoTable(){
+  const m=yoM,al=fS(m.last.d),el=document.getElementById('yo-tbl'),ys=Array.from(yoSel).sort((a,b)=>b-a);
+  if(!ys.length){el.innerHTML='<div style="padding:14px;font-size:12px;color:var(--g400)">Select one or more years above.</div>';return}
+  let h='<table><thead><tr><th>Year</th><th>Return to '+al+'</th><th>Below YTD high</th><th>Worst drawdown</th><th>Next 3 mo</th><th>Next 12 mo</th><th>Worst, next 12 mo</th></tr></thead><tbody>';
+  ys.forEach(y=>{const o=m.yrs[y],c=yoColor(y);
+    const cell=v=>'<td style="color:'+yoClr(v)+';font-weight:600">'+yoPct(v)+'</td>';
+    h+='<tr><td><span class="yo-sw" style="border-color:'+c+'"></span><strong>'+y+'</strong>'+(y===m.cur?' <span style="color:var(--g400);font-size:10px">YTD</span>':'')+'</td>'+cell(o.ytd)+cell(o.curdd)+cell(o.mdd)+cell(o.f3)+cell(o.f12)+cell(o.fw)+'</tr>'});
+  el.innerHTML=h+'</tbody></table>';
+}
+function yoDraw(){
+  const cv=document.getElementById('yo-canvas'),wr=document.getElementById('yo-wrap');if(!cv||!yoM)return;
+  const dpr=window.devicePixelRatio||1,W=wr.clientWidth,H=wr.clientHeight;if(!W||!H)return;
+  cv.width=W*dpr;cv.height=H*dpr;const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+  const m=yoM,all=m.all;
+  const S=Array.from(yoSel).sort((a,b)=>a-b).map(y=>{const o=m.yrs[y],pts=[];
+    if(yoMode==='fwd'){const end=y===m.cur?o.ai:Math.min(o.ai+252,m.n-1);for(let i=o.s;i<=end;i++)pts.push({x:i-o.ai,y:all[i].c/o.base*100,d:all[i].d})}
+    else{for(let i=o.s;i<=o.e;i++)pts.push({x:yoDoy(all[i].d),y:all[i].c/o.base*100,d:all[i].d})}
+    return{y,pts}});
+  const P={t:14,r:46,b:28,l:46},cw=W-P.l-P.r,ch=H-P.t-P.b;
+  let x0,x1;if(yoMode==='fwd'){x0=-225;S.forEach(s=>{if(s.pts.length&&s.pts[0].x<x0)x0=s.pts[0].x});x1=252}else{x0=1;x1=366}
+  let y0=100,y1=100;S.forEach(s=>s.pts.forEach(p=>{if(p.y<y0)y0=p.y;if(p.y>y1)y1=p.y}));
+  const rg=Math.max(y1-y0,10),st=yoNice(rg);y0=Math.floor((y0-rg*.04)/st)*st;y1=Math.ceil((y1+rg*.04)/st)*st;
+  const X=v=>P.l+(v-x0)/(x1-x0)*cw,Y=v=>P.t+(1-(v-y0)/(y1-y0))*ch;
+  yoPts=S;yoGeo={pl:P.l,cw,x0,x1,X,Y,W,H};
+  ctx.font='10px Inter, sans-serif';ctx.textBaseline='middle';
+  for(let v=y0;v<=y1+1e-9;v+=st){ctx.strokeStyle=Math.abs(v-100)<1e-9?'#8d99ae':'#eef1f5';ctx.lineWidth=Math.abs(v-100)<1e-9?1.2:1;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(P.l,Y(v));ctx.lineTo(P.l+cw,Y(v));ctx.stroke();ctx.fillStyle='#8d99ae';ctx.textAlign='right';ctx.fillText(String(Math.round(v*100)/100),P.l-6,Y(v))}
+  ctx.textAlign='center';ctx.textBaseline='top';ctx.fillStyle='#8d99ae';
+  if(yoMode==='fwd'){[-189,-126,-63,0,63,126,189,252].forEach(t=>{if(t<x0)return;ctx.fillText(t===0?fS(m.last.d):(Math.round(t/21)>0?'+':'')+Math.round(t/21)+' mo',X(t),P.t+ch+8)});
+    ctx.strokeStyle='#8d99ae';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(X(0),P.t);ctx.lineTo(X(0),P.t+ch);ctx.stroke();ctx.setLineDash([])}
+  else{YO_MST.forEach((t,i)=>ctx.fillText(YO_MON[i],X(t+14),P.t+ch+8))}
+  const ord=S.slice().sort((a,b)=>{const ra=(yoHov&&yoHov.y===a.y?2:0)+(a.y===m.cur?1:0),rb=(yoHov&&yoHov.y===b.y?2:0)+(b.y===m.cur?1:0);return ra-rb});
+  ord.forEach(s=>{if(s.pts.length<2)return;const hv=yoHov&&yoHov.y===s.y;
+    ctx.globalAlpha=yoHov&&!hv?.3:1;ctx.strokeStyle=yoColor(s.y);ctx.lineWidth=(s.y===m.cur||hv)?3:1.6;ctx.setLineDash(yoDash(s.y));ctx.lineJoin='round';ctx.lineCap='round';
+    ctx.beginPath();s.pts.forEach((p,i)=>{if(i===0)ctx.moveTo(X(p.x),Y(p.y));else ctx.lineTo(X(p.x),Y(p.y))});ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1});
+  const labs=S.filter(s=>s.pts.length>1).map(s=>{const q=s.pts[s.pts.length-1];return{y:s.y,x:X(q.x)+(yoMode==='fwd'&&s.y===m.cur?11:6),py:Y(q.y)}});
+  const edge=labs.filter(l=>l.x>P.l+cw-12).sort((a,b)=>a.py-b.py);
+  for(let i=1;i<edge.length;i++)if(edge[i].py-edge[i-1].py<12)edge[i].py=edge[i-1].py+12;
+  ctx.textAlign='left';ctx.textBaseline='middle';ctx.font='600 10px Inter, sans-serif';
+  labs.forEach(l=>{ctx.lineWidth=3.5;ctx.strokeStyle='#fff';ctx.lineJoin='round';ctx.setLineDash([]);ctx.strokeText(String(l.y),l.x,l.py);ctx.fillStyle=yoColor(l.y);ctx.fillText(String(l.y),l.x,l.py)});
+  if(yoMode==='fwd'&&yoSel.has(m.cur)){const o=S.find(s=>s.y===m.cur);if(o&&o.pts.length){const q=o.pts[o.pts.length-1];ctx.fillStyle='#2563eb';ctx.beginPath();ctx.arc(X(q.x),Y(q.y),4.5,0,Math.PI*2);ctx.fill()}}
+  if(yoHov){const s=S.find(z=>z.y===yoHov.y);if(s&&s.pts[yoHov.i]){const q=s.pts[yoHov.i];ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(X(q.x),Y(q.y),5,0,Math.PI*2);ctx.fill();ctx.strokeStyle=yoColor(s.y);ctx.lineWidth=2;ctx.stroke()}}
+}
+function yoSetup(){
+  const cv=document.getElementById('yo-canvas'),tt=document.getElementById('yo-tt');if(!cv)return;
+  const gx=e=>{const r=cv.getBoundingClientRect(),t=e.touches?e.touches[0]:e;return[t.clientX-r.left,t.clientY-r.top]};
+  const mv=e=>{if(!yoGeo||!yoPts.length)return;const[mx,my]=gx(e),g=yoGeo;let best=null,bd=1e9;
+    yoPts.forEach(s=>{if(!s.pts.length)return;const xv=g.x0+(mx-g.pl)/g.cw*(g.x1-g.x0);let lo=0,hi=s.pts.length-1;
+      while(hi-lo>1){const md=(lo+hi)>>1;if(s.pts[md].x<=xv)lo=md;else hi=md}
+      const k=Math.abs(s.pts[lo].x-xv)<=Math.abs(s.pts[hi].x-xv)?lo:hi,q=s.pts[k];
+      if(Math.abs(g.X(q.x)-mx)>30)return;const dy=Math.abs(g.Y(q.y)-my);if(dy<bd){bd=dy;best={y:s.y,i:k,q}}});
+    if(best&&bd<40){yoHov={y:best.y,i:best.i};yoDraw();const q=best.q,v=q.y-100;
+      tt.innerHTML='<div class="tt-d">'+fDL(q.d)+'</div><div class="tt-r"><span style="color:'+yoColor(best.y)+';font-weight:700">'+best.y+'</span><span style="font-weight:600;color:'+yoClr(v)+'">'+(v>=0?'+':'')+v.toFixed(1)+'% vs prior year-end</span></div>'+(yoMode==='fwd'?'<div class="tt-r" style="color:var(--g400);font-size:11px"><span>'+(q.x===0?'Anchor date':Math.abs(q.x)+' trading days '+(q.x<0?'before':'after')+' anchor')+'</span></div>':'');
+      tt.style.display='block';tt.style.left=Math.min(mx+14,g.W-240)+'px';tt.style.top=Math.max(8,my-56)+'px'}
+    else{if(yoHov){yoHov=null;yoDraw()}tt.style.display='none'}};
+  cv.addEventListener('mousemove',mv);cv.addEventListener('touchmove',mv,{passive:true});
+  cv.addEventListener('mouseleave',()=>{tt.style.display='none';if(yoHov){yoHov=null;yoDraw()}});
+}
+
+function updateUI(){renderAsOf();renderStatus();renderZoom();drawChart();renderRBHist();renderBestDays();renderPerf();renderRolling();yoRefresh()}
+updateUI();setupInteract();yoSetup();restoreSections();window.addEventListener('resize',drawChart);window.addEventListener('resize',yoDraw);
 </script>
 </body>
 </html>
